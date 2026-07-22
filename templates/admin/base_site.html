@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Green View Cottages') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">{{ site_header|default:_('Green View Cottages Admin') }}</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<meta name="theme-color" content="#14532d">
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root {
+    --gvc-green: #14532d;
+    --gvc-green-soft: #166534;
+    --gvc-gold: #b45309;
+  }
+
+  .main-sidebar.sidebar-dark-primary {
+    background-color: #10251a;
+  }
+
+  .brand-link {
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .brand-link .brand-text {
+    font-weight: 600 !important;
+    letter-spacing: 0;
+  }
+
+  .sidebar .nav-link.active {
+    background-color: var(--gvc-green-soft) !important;
+  }
+
+  .navbar-white {
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .btn-primary,
+  input[type="submit"].default,
+  .object-tools a:link,
+  .object-tools a:visited {
+    background-color: var(--gvc-green) !important;
+    border-color: var(--gvc-green) !important;
+  }
+
+  a,
+  .breadcrumb-item a {
+    color: var(--gvc-green-soft);
+  }
+
+  a:hover {
+    color: var(--gvc-gold);
+  }
+</style>
+{% endblock %}
