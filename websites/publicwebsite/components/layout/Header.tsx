@@ -95,7 +95,7 @@ function isActiveNavigation(
 
 export default function Header({
   propertyName = "Green View Cottages",
-  logoImage = "/images/brand-image.webp",
+  logoImage = "/images/navbar.png",
   phoneNumber =
     process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
   whatsappNumber =

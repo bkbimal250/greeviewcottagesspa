@@ -87,7 +87,7 @@ function createWhatsAppHref(
 
 export default function Footer({
   propertyName = "Green View Cottages",
-  logoImage = "/images/brand-image.webp",
+  logoImage = "/images/navbar.png",
   address = "Dhundai, Mount Abu, Sirohi, Rajasthan - 307501",
   phoneNumber =
     process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
@@ -206,7 +206,7 @@ export default function Footer({
                 alt={propertyName}
                 fill
                 sizes="224px"
-                className="object-contain object-left brightness-0 invert"
+                className="object-contain object-left "
               />
             </Link>
 
