@@ -82,7 +82,7 @@ function isSafeRedirectPath(
   );
 }
 
-export function middleware(
+export function proxy(
   request: NextRequest,
 ) {
   const { pathname, search } =
