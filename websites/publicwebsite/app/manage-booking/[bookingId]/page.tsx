@@ -51,7 +51,7 @@ interface ApiResponse<T> {
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:8000/api/v1";
+  "https://api.backend.greencottagesandspa.in/api/v1";
 
 function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00`);

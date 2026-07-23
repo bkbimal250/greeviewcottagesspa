@@ -7,9 +7,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, []),
-    CORS_ALLOWED_ORIGINS=(list, []),
-    CSRF_TRUSTED_ORIGINS=(list, []),
+    ALLOWED_HOSTS=(
+        list,
+        [
+            "localhost",
+            "127.0.0.1",
+            "testserver",
+            "greencottagesandspa.in",
+            "booking.greencottagesandspa.in",
+            "api.backend.greencottagesandspa.in",
+        ],
+    ),
+    CORS_ALLOWED_ORIGINS=(
+        list,
+        [
+            "https://greencottagesandspa.in",
+            "https://booking.greencottagesandspa.in",
+            "https://api.backend.greencottagesandspa.in",
+        ],
+    ),
+    CSRF_TRUSTED_ORIGINS=(
+        list,
+        [
+            "https://greencottagesandspa.in",
+            "https://booking.greencottagesandspa.in",
+            "https://api.backend.greencottagesandspa.in",
+        ],
+    ),
     SECURE_SSL_REDIRECT=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
@@ -276,7 +300,7 @@ RAZORPAY_ORDER_EXPIRY_MINUTES = env.int("RAZORPAY_ORDER_EXPIRY_MINUTES", default
 UPI_PAYEE_VPA = env("UPI_PAYEE_VPA", default="")
 UPI_PAYEE_NAME = env("UPI_PAYEE_NAME", default="Green View Cottages")
 
-FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_URL = env("FRONTEND_URL", default="https://greencottagesandspa.in")
 PROPERTY_DEFAULT_PHONE = env("PROPERTY_DEFAULT_PHONE", default="09784622826")
 
 LOGGING = {
