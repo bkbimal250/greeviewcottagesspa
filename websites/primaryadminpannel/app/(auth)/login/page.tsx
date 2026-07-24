@@ -124,8 +124,8 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-sm sm:p-8">
-      <div>
+    <section className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 text-center shadow-sm sm:p-8">
+      <div className="mx-auto max-w-sm">
         <p className="text-sm font-semibold text-[var(--primary)]">
           Welcome back
         </p>
@@ -151,7 +151,7 @@ export default function LoginPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="mt-7 space-y-5"
+        className="mt-7 space-y-5 text-left"
         noValidate
       >
         <Input
