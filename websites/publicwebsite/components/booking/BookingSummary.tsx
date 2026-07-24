@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   FaBed,
   FaCalendarAlt,
@@ -70,14 +71,18 @@ export default function BookingSummary({
         className,
       ].join(" ")}
     >
-      <img
-        src={withImageFallback(
-          thumbnail,
-          "/images/cottage-placeholder.jpg",
-        )}
-        alt={cottageName}
-        className="aspect-[16/9] w-full object-cover"
-      />
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--surface-muted)]">
+        <Image
+          src={withImageFallback(
+            thumbnail,
+            "/images/cottage-placeholder.jpg",
+          )}
+          alt={cottageName}
+          fill
+          sizes="(max-width: 1024px) 100vw, 420px"
+          className="object-cover"
+        />
+      </div>
 
       <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">

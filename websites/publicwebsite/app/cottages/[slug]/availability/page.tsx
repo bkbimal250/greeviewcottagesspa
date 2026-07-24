@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -191,14 +192,19 @@ export default async function CottageAvailabilityPage({
             </div>
 
             <div className="overflow-hidden rounded-lg border border-white/15 bg-white/10 backdrop-blur">
-              <img
-                src={withImageFallback(
-                  cottage.thumbnail || cottage.cover_image,
-                  "/images/cottage-placeholder.jpg",
-                )}
-                alt={cottage.name}
-                className="aspect-[16/10] w-full object-cover"
-              />
+              <div className="relative aspect-[16/10] w-full overflow-hidden">
+                <Image
+                  src={withImageFallback(
+                    cottage.thumbnail || cottage.cover_image,
+                    "/images/cottage-placeholder.jpg",
+                  )}
+                  alt={cottage.name}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 340px"
+                  className="object-cover"
+                />
+              </div>
 
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/65">

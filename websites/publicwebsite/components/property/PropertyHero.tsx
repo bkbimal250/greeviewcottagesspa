@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   FaArrowRight,
   FaCalendarAlt,
@@ -70,13 +71,16 @@ export default function PropertyHero({
         className,
       ].join(" ")}
     >
-      <img
+      <Image
         src={withImageFallback(
           heroImage,
           "/images/property-hero-placeholder.webp",
         )}
         alt={`${name} in ${location}`}
-        className="absolute inset-0 -z-30 h-full w-full object-cover"
+        fill
+        priority
+        sizes="100vw"
+        className="absolute inset-0 -z-30 object-cover"
       />
 
       <div className="absolute inset-0 -z-20 bg-gradient-to-r from-[#0d2419]/95 via-[#10291e]/72 to-[#10291e]/20" />

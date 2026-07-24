@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   FaArrowRight,
@@ -80,18 +81,18 @@ export default function CottageCard({
         aria-label={`View ${cottage.name}`}
         className="group relative block overflow-hidden bg-[var(--surface-muted)]"
       >
-        <img
-          src={withImageFallback(
-            cottage.thumbnail,
-            "/images/cottage-placeholder.jpg",
-          )}
-          alt={`${cottage.name} at Green View Cottages`}
-          className={[
-            "aspect-[4/3] w-full object-cover",
-            "transition duration-500 group-hover:scale-105",
-          ].join(" ")}
-          loading="lazy"
-        />
+        <div className="relative aspect-[4/3] w-full overflow-hidden">
+          <Image
+            src={withImageFallback(
+              cottage.thumbnail,
+              "/images/cottage-placeholder.jpg",
+            )}
+            alt={`${cottage.name} at Green View Cottages`}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+            className="object-cover transition duration-500 group-hover:scale-105"
+          />
+        </div>
 
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
 

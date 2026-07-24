@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   FaChevronLeft,
@@ -135,24 +136,24 @@ export default function CottageGallery({
                 "focus-visible:outline-none focus-visible:ring-2",
                 "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
                 isLeadImage
-                  ? "col-span-2 row-span-2"
-                  : "",
+                  ? "col-span-2 row-span-2 aspect-[4/3]"
+                  : "aspect-[4/3]",
               ].join(" ")}
               aria-label={`View ${cottageName} gallery image ${
                 index + 1
               }`}
             >
-              <img
+              <Image
                 src={getImageUrl(image)}
                 alt={`${cottageName} gallery image ${index + 1}`}
-                className={[
-                  "w-full object-cover transition duration-300",
-                  "group-hover:scale-[1.03]",
+                fill
+                sizes={
                   isLeadImage
-                    ? "aspect-[4/3] h-full"
-                    : "aspect-[4/3]",
-                ].join(" ")}
-                loading="eager"
+                    ? "(max-width: 640px) 100vw, 50vw"
+                    : "(max-width: 640px) 50vw, 25vw"
+                }
+                priority={isLeadImage}
+                className="object-cover transition duration-300 group-hover:scale-[1.03]"
               />
 
               <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/20" />
@@ -199,16 +200,20 @@ export default function CottageGallery({
           ) : null}
 
           <div
-            className="max-h-[86vh] w-full max-w-6xl"
+            className="w-full max-w-6xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <img
-              src={getImageUrl(activeImage)}
-              alt={`${cottageName} gallery image ${
-                (activeIndex || 0) + 1
-              }`}
-              className="mx-auto max-h-[82vh] w-full rounded-lg object-contain"
-            />
+            <div className="relative mx-auto h-[82vh] w-full overflow-hidden rounded-lg">
+              <Image
+                src={getImageUrl(activeImage)}
+                alt={`${cottageName} gallery image ${
+                  (activeIndex || 0) + 1
+                }`}
+                fill
+                sizes="100vw"
+                className="object-contain"
+              />
+            </div>
 
             <p className="mt-3 text-center text-sm font-semibold text-white">
               {(activeIndex || 0) + 1} / {galleryImages.length}

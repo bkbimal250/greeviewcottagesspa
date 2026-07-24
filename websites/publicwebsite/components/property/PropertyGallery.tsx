@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -287,22 +288,22 @@ export default function PropertyGallery({
                           : "",
                       ].join(" ")}
                     >
-                      <img
+                      <Image
                         src={getImageUrl(
                           image.image,
                         )}
-                        alt={image.alt}
-                        className={[
-                          "absolute inset-0",
-                          "h-full w-full object-cover",
-                          "transition duration-700",
-                          "group-hover:scale-[1.06]",
-                        ].join(" ")}
-                        loading={
-                          isPrimary
-                            ? "eager"
-                            : "lazy"
+                        alt={
+                          image.alt ||
+                          "Green View Cottages property photo"
                         }
+                        fill
+                        sizes={
+                          isPrimary
+                            ? "(max-width: 768px) 100vw, 50vw"
+                            : "(max-width: 768px) 100vw, 25vw"
+                        }
+                        priority={isPrimary}
+                        className="object-cover transition duration-700 group-hover:scale-[1.06]"
                       />
 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-80 transition duration-300 group-hover:opacity-100" />
@@ -434,13 +435,18 @@ export default function PropertyGallery({
               event.stopPropagation()
             }
           >
-            <div className="relative flex max-h-[78vh] w-full items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-[0_30px_100px_rgba(0,0,0,0.5)] sm:rounded-3xl">
-              <img
+            <div className="relative h-[78vh] w-full overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-[0_30px_100px_rgba(0,0,0,0.5)] sm:rounded-3xl">
+              <Image
                 src={getImageUrl(
                   activeImage.image,
                 )}
-                alt={activeImage.alt}
-                className="max-h-[78vh] max-w-full object-contain"
+                alt={
+                  activeImage.alt ||
+                  "Green View Cottages property photo"
+                }
+                fill
+                sizes="100vw"
+                className="object-contain"
               />
             </div>
 

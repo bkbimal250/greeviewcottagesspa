@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   FaLeaf,
   FaMapMarkerAlt,
@@ -78,15 +79,18 @@ export default function PropertyAbout({
             <div className="absolute -bottom-6 -right-6 hidden h-36 w-36 rounded-full bg-[var(--primary)]/8 lg:block" />
 
             <div className="group relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface-muted)] shadow-[0_24px_70px_rgba(23,61,44,0.14)]">
-              <img
-                src={withImageFallback(
-                  image,
-                  "/images/property-about-placeholder.webp",
-                )}
-                alt="Green View Cottages property"
-                className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-[1.03]"
-                loading="lazy"
-              />
+              <div className="relative aspect-[4/3] w-full overflow-hidden">
+                <Image
+                  src={withImageFallback(
+                    image,
+                    "/images/property-about-placeholder.webp",
+                  )}
+                  alt="Green View Cottages property"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 48vw"
+                  className="object-cover transition duration-700 group-hover:scale-[1.03]"
+                />
+              </div>
 
               <div className="absolute inset-0 bg-gradient-to-t from-[#10291e]/45 via-transparent to-transparent" />
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -354,14 +355,17 @@ export default async function CottageDetailPage({
 
       <section>
         <Container>
-          <div className="overflow-hidden rounded-[var(--radius-xl)] bg-[var(--surface-muted)]">
-            <img
+          <div className="relative aspect-[16/7] min-h-[320px] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--surface-muted)]">
+            <Image
               src={withImageFallback(
                 cottage.cover_image || cottage.thumbnail,
                 "/images/cottage-placeholder.jpg",
               )}
               alt={`${cottage.name} cover`}
-              className="aspect-[16/7] min-h-[320px] w-full object-cover"
+              fill
+              priority
+              sizes="(max-width: 1280px) 100vw, 1180px"
+              className="object-cover"
             />
           </div>
         </Container>

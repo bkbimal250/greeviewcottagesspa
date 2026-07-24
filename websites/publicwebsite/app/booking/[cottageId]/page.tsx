@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   FormEvent,
@@ -1606,11 +1607,15 @@ export default function BookingPage() {
 
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white shadow-[var(--shadow-md)]">
-                <img
-                  src={getImageUrl(cottage.thumbnail)}
-                  alt={cottage.name}
-                  className="aspect-[16/9] w-full object-cover"
-                />
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--surface-muted)]">
+                  <Image
+                    src={getImageUrl(cottage.thumbnail)}
+                    alt={cottage.name}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 380px"
+                    className="object-cover"
+                  />
+                </div>
 
                 <div className="p-6">
                   <p className="text-xs font-semibold uppercase tracking-wider text-[var(--primary)]">
