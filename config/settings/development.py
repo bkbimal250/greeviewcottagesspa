@@ -12,6 +12,14 @@ EMAIL_BACKEND = env(  # noqa: F405
 )
 
 ALLOWED_HOSTS = list(set(ALLOWED_HOSTS + ["localhost", "127.0.0.1", "testserver"]))  # noqa: F405
+CORS_ALLOWED_ORIGINS = [  # noqa: F405
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+CSRF_TRUSTED_ORIGINS = [  # noqa: F405
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 if not env.bool("USE_REDIS_CACHE", default=False):  # noqa: F405
     CACHES = {  # noqa: F405

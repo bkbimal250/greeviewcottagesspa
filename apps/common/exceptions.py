@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -6,6 +7,8 @@ from rest_framework import status
 from rest_framework.views import exception_handler
 
 from apps.common.responses import error_response
+
+logger = logging.getLogger(__name__)
 
 
 def _flatten_message(detail: Any) -> str:
@@ -29,6 +32,13 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]):
     if response is None:
         if settings.DEBUG:
             raise exc
+        view = context.get("view")
+        request = context.get("request")
+        logger.exception(
+            "Unhandled API exception in %s %s",
+            view.__class__.__name__ if view else "unknown view",
+            request.path if request else "unknown path",
+        )
         return error_response(
             message="Internal server error",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
