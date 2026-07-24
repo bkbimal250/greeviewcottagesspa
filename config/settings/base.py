@@ -83,7 +83,6 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
-    "storages",
 ]
 
 LOCAL_APPS = [
@@ -361,21 +360,12 @@ STORAGES = {
     },
 }
 
-AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID", default="")
-AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY", default="")
-AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
-AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="")
-AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
-AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
 IMAGE_UPLOAD_MAX_SIZE_MB = env.int("IMAGE_UPLOAD_MAX_SIZE_MB", default=10)
 IMAGE_UPLOAD_MAX_SIZE_BYTES = IMAGE_UPLOAD_MAX_SIZE_MB * 1024 * 1024
 IMAGE_MAX_WIDTH = env.int("IMAGE_MAX_WIDTH", default=2000)
 IMAGE_MAX_HEIGHT = env.int("IMAGE_MAX_HEIGHT", default=2000)
 IMAGE_WEBP_QUALITY = env.int("IMAGE_WEBP_QUALITY", default=82)
 IMAGE_WEBP_METHOD = env.int("IMAGE_WEBP_METHOD", default=6)
-IMAGE_S3_CACHE_CONTROL = env(
-    "IMAGE_S3_CACHE_CONTROL", default="public, max-age=31536000, immutable"
-)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.common.services.image_upload import upload_image_to_s3
+from apps.common.services.image_upload import upload_image_to_media
 from apps.common.validators import validate_image_file
 from apps.properties.models import Property
 
@@ -193,7 +193,7 @@ class PropertyImageUploadSerializer(serializers.Serializer):
         image_type = self.validated_data["image_type"]
         image = self.validated_data["image"]
 
-        uploaded_image = upload_image_to_s3(
+        uploaded_image = upload_image_to_media(
             image_file=image,
             property_id=property_obj.id,
             image_type=image_type,

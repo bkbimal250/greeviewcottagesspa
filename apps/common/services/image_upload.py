@@ -6,9 +6,10 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-import boto3
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
@@ -34,24 +35,13 @@ IMAGE_TYPE_DIRECTORY_MAP = {
 }
 
 
-class S3ImageUploadService:
+class LocalMediaImageUploadService:
     def __init__(self) -> None:
-        self.bucket_name = getattr(settings, "AWS_STORAGE_BUCKET_NAME", "")
-        self.region_name = getattr(settings, "AWS_S3_REGION_NAME", "")
-        self.endpoint_url = getattr(settings, "AWS_S3_ENDPOINT_URL", "") or None
-        self.custom_domain = getattr(settings, "AWS_S3_CUSTOM_DOMAIN", "") or None
-        self.access_key_id = getattr(settings, "AWS_ACCESS_KEY_ID", "") or None
-        self.secret_access_key = getattr(settings, "AWS_SECRET_ACCESS_KEY", "") or None
         self.max_size_bytes = getattr(settings, "IMAGE_UPLOAD_MAX_SIZE_BYTES", 10 * 1024 * 1024)
         self.max_width = getattr(settings, "IMAGE_MAX_WIDTH", 2000)
         self.max_height = getattr(settings, "IMAGE_MAX_HEIGHT", 2000)
         self.webp_quality = getattr(settings, "IMAGE_WEBP_QUALITY", 82)
         self.webp_method = getattr(settings, "IMAGE_WEBP_METHOD", 6)
-        self.cache_control = getattr(
-            settings,
-            "IMAGE_S3_CACHE_CONTROL",
-            "public, max-age=31536000, immutable",
-        )
 
     def validate_image(self, image_file: Any) -> None:
         if not image_file:
@@ -155,31 +145,8 @@ class S3ImageUploadService:
         if key.startswith(("http://", "https://")):
             return key
 
-        if self.custom_domain:
-            return f"https://{self.custom_domain}/{key.lstrip('/')}"
-
-        if self.endpoint_url and self.bucket_name:
-            endpoint = self.endpoint_url.rstrip("/")
-            return f"{endpoint}/{self.bucket_name}/{key.lstrip('/')}"
-
-        if self.bucket_name and self.region_name:
-            return (
-                f"https://{self.bucket_name}.s3.{self.region_name}.amazonaws.com/{key.lstrip('/')}"
-            )
-
-        return key
-
-    def get_client(self) -> Any:
-        if not self.bucket_name:
-            raise ValidationError("AWS S3 bucket is not configured.")
-
-        return boto3.client(
-            "s3",
-            aws_access_key_id=self.access_key_id,
-            aws_secret_access_key=self.secret_access_key,
-            region_name=self.region_name or None,
-            endpoint_url=self.endpoint_url or None,
-        )
+        media_url = getattr(settings, "MEDIA_URL", "/media/")
+        return f"{media_url.rstrip('/')}/{key.lstrip('/')}"
 
     def upload_image(
         self,
@@ -198,21 +165,14 @@ class S3ImageUploadService:
         )
 
         try:
-            client = self.get_client()
-            client.put_object(
-                Bucket=self.bucket_name,
-                Key=key,
-                Body=processed_file.getvalue(),
-                ContentType="image/webp",
-                CacheControl=self.cache_control,
-            )
+            saved_key = default_storage.save(key, ContentFile(processed_file.getvalue()))
         except Exception as exc:
-            logger.exception("S3 image upload failed for key %s", key)
+            logger.exception("Local image upload failed for key %s", key)
             raise ValidationError("Unable to upload image.") from exc
 
         return {
-            "key": key,
-            "url": self.build_public_url(key),
+            "key": saved_key,
+            "url": self.build_public_url(saved_key),
         }
 
     def delete_object(self, reference: str | None) -> None:
@@ -229,10 +189,10 @@ class S3ImageUploadService:
             return
 
         try:
-            client = self.get_client()
-            client.delete_object(Bucket=self.bucket_name, Key=logical_key)
+            if default_storage.exists(logical_key):
+                default_storage.delete(logical_key)
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.warning("Failed to delete S3 object %s", logical_key, exc_info=exc)
+            logger.warning("Failed to delete local media object %s", logical_key, exc_info=exc)
 
     def get_image_url(self, reference: str | None) -> str:
         if not reference:
@@ -242,14 +202,14 @@ class S3ImageUploadService:
         return self.build_public_url(reference)
 
 
-image_upload_service = S3ImageUploadService()
+image_upload_service = LocalMediaImageUploadService()
 
 
-def upload_image_to_s3(*args: Any, **kwargs: Any) -> dict[str, str]:
+def upload_image_to_media(*args: Any, **kwargs: Any) -> dict[str, str]:
     return image_upload_service.upload_image(*args, **kwargs)
 
 
-def delete_s3_image(reference: str | None) -> None:
+def delete_media_image(reference: str | None) -> None:
     image_upload_service.delete_object(reference)
 
 

@@ -52,38 +52,8 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="Lax")  # noqa: F405
 CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")  # noqa: F405
 
-if not AWS_STORAGE_BUCKET_NAME:  # noqa: F405
-    raise ImproperlyConfigured("Set AWS_STORAGE_BUCKET_NAME for production media storage.")
-
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = env.bool("AWS_QUERYSTRING_AUTH", default=False)  # noqa: F405
-AWS_S3_FILE_OVERWRITE = env.bool("AWS_S3_FILE_OVERWRITE", default=False)  # noqa: F405
-AWS_LOCATION = env("AWS_LOCATION", default="media")  # noqa: F405
-AWS_S3_OBJECT_PARAMETERS = {
-    "CacheControl": IMAGE_S3_CACHE_CONTROL,  # noqa: F405
-}
-
-if AWS_S3_CUSTOM_DOMAIN:  # noqa: F405
-    s3_custom_domain = (
-        AWS_S3_CUSTOM_DOMAIN.rstrip("/").removeprefix("https://").removeprefix("http://")
-    )  # noqa: F405
-    MEDIA_URL = f"https://{s3_custom_domain}/{AWS_LOCATION}/"  # noqa: F405
-elif AWS_S3_REGION_NAME:  # noqa: F405
-    MEDIA_URL = (  # noqa: F405
-        f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
-        f"{AWS_LOCATION}/"
-    )
-else:
-    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/{AWS_LOCATION}/"  # noqa: F405
-
-STORAGES = {  # noqa: F405
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
+MEDIA_URL = env("MEDIA_URL", default="/media/")  # noqa: F405
+MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")  # noqa: F405
 
 if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:  # noqa: F405
     raise ImproperlyConfigured("Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET for production.")
