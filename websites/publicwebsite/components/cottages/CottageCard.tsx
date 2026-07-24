@@ -2,9 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   FaArrowRight,
-  FaCalendarAlt,
+  FaBed,
+  FaUsers,
 } from "react-icons/fa";
 
+import ContactActions from "@/components/common/ContactActions";
 import Price from "@/components/common/Price";
 import CottageAvailabilityBadge from "@/components/cottages/CottageAvailabilityBadge";
 import { withImageFallback } from "@/lib/utils/images";
@@ -48,10 +50,6 @@ export default function CottageCard({
   const detailsHref = searchQuery
     ? `/cottages/${cottage.slug}?${searchQuery}`
     : `/cottages/${cottage.slug}`;
-
-  const bookingHref = searchQuery
-    ? `/booking/${cottage.id}?${searchQuery}`
-    : `/cottages/${cottage.slug}/availability`;
 
   const isAvailable =
     cottage.is_available ??
@@ -127,6 +125,41 @@ export default function CottageCard({
               {cottage.name}
             </Link>
           </h2>
+
+          {cottage.short_description || cottage.description ? (
+            <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--muted)]">
+              {cottage.short_description || cottage.description}
+            </p>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {cottage.maximum_guests ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--primary-light)] px-3 py-1.5 text-xs font-bold text-[var(--primary)]">
+                <FaUsers aria-hidden="true" />
+                Up to {cottage.maximum_guests} guests
+              </span>
+            ) : null}
+
+            {cottage.bed_type ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-bold text-[var(--foreground)]">
+                <FaBed aria-hidden="true" />
+                {cottage.bed_type}
+              </span>
+            ) : null}
+          </div>
+
+          {cottage.amenities?.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {cottage.amenities.slice(0, 3).map((amenity) => (
+                <span
+                  key={amenity}
+                  className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--muted)]"
+                >
+                  {amenity}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-auto pt-4">
@@ -160,45 +193,28 @@ export default function CottageCard({
             ) : null}
           </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3">
             <Link
               href={detailsHref}
               className={[
                 "inline-flex min-h-11 items-center justify-center gap-2",
-                "rounded-full border border-[var(--primary)] px-4",
-                "text-sm font-semibold text-[var(--primary)]",
-                "transition hover:bg-[var(--primary-light)]",
+                "rounded-full bg-[var(--primary)] px-4",
+                "text-sm font-bold text-white",
+                "transition hover:bg-[var(--primary-hover)]",
+                "focus-visible:outline-none focus-visible:ring-2",
+                "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
               ].join(" ")}
             >
               View Details
               <FaArrowRight aria-hidden="true" />
             </Link>
 
-            <Link
-              href={bookingHref}
-              aria-disabled={showAvailability && !isAvailable}
-              className={[
-                "inline-flex min-h-11 items-center justify-center gap-2",
-                "rounded-full px-4 text-sm font-semibold transition",
-                showAvailability && !isAvailable
-                  ? "pointer-events-none cursor-not-allowed bg-gray-200 text-gray-500"
-                  : "bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]",
-              ].join(" ")}
-            >
-              {showAvailability && !isAvailable
-                ? "Unavailable"
-                : searchQuery
-                  ? "Book Online"
-                  : "Select Dates"}
-
-              {isAvailable ? (
-                searchQuery ? (
-                  <FaArrowRight aria-hidden="true" />
-                ) : (
-                  <FaCalendarAlt aria-hidden="true" />
-                )
-              ) : null}
-            </Link>
+            <ContactActions
+              cottageName={cottage.name}
+              size="sm"
+              whatsappLabel="WhatsApp"
+              callLabel="Call"
+            />
           </div>
         </div>
       </div>

@@ -6,9 +6,9 @@ import Container from "@/components/layout/Container";
 import { getCottages, toCottageCard } from "@/lib/api/cottages";
 
 export const metadata: Metadata = {
-  title: "Cottages",
+  title: "Cottages at Green View | Comfortable Nature Stays",
   description:
-    "Explore cottage options and check availability at Green View Cottages in Mount Abu.",
+    "Compare comfortable cottage stays at Green View Cottages & Spa in Mount Abu, view prices, amenities and direct enquiry options.",
   alternates: {
     canonical: "/cottages",
   },
@@ -37,8 +37,9 @@ export default async function CottagesPage() {
             </h1>
 
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/75">
-              Browse active cottages, view the key price, then open a cottage
-              page to select dates and book online.
+              Browse active cottages, compare useful stay details, then open a
+              cottage page to view photos, availability and direct enquiry
+              options.
             </p>
           </div>
         </Container>

@@ -4,16 +4,16 @@ from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, override_settings
 from PIL import Image
 
-from apps.common.services.image_upload import S3ImageUploadService
+from apps.common.services.image_upload import LocalMediaImageUploadService
 
 
 class PropertySetupTests(SimpleTestCase):
     pass
 
 
-class S3ImageUploadServiceTests(SimpleTestCase):
+class LocalMediaImageUploadServiceTests(SimpleTestCase):
     def setUp(self):
-        self.service = S3ImageUploadService()
+        self.service = LocalMediaImageUploadService()
 
     def test_process_image_converts_jpeg_to_webp_and_uses_webp_extension(self):
         image_file = BytesIO()
@@ -43,7 +43,7 @@ class S3ImageUploadServiceTests(SimpleTestCase):
         image_file.seek(0)
 
         with override_settings(IMAGE_MAX_WIDTH=2000, IMAGE_MAX_HEIGHT=2000):
-            service = S3ImageUploadService()
+            service = LocalMediaImageUploadService()
             processed_file, _ = service.process_image(image_file)
             processed_file.seek(0)
             with Image.open(processed_file) as processed_image:

@@ -25,9 +25,24 @@ export interface CottageListParams
   extends PaginationParams,
     CottageFilters {}
 
+type MaybeWrapped<T> = ApiSuccessResponse<T> | T;
+
 const unwrap = <T>(response: {
-  data: ApiSuccessResponse<T>;
-}): T => response.data.data;
+  data: MaybeWrapped<T>;
+}): T => {
+  const value = response.data as ApiSuccessResponse<T>;
+
+  if (
+    value &&
+    typeof value === "object" &&
+    "success" in value &&
+    "data" in value
+  ) {
+    return value.data;
+  }
+
+  return response.data as T;
+};
 
 export const cottageService = {
   async getPublicCottages(

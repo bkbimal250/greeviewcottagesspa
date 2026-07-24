@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   FaPhoneAlt,
   FaTimes,
@@ -9,6 +9,11 @@ import {
 } from "react-icons/fa";
 
 import Button from "@/components/common/Button";
+import {
+  createGeneralWhatsAppMessage,
+  createPhoneHref,
+  createWhatsAppHref,
+} from "@/lib/config/contact";
 
 interface NavigationItem {
   label: string;
@@ -24,22 +29,6 @@ interface MobileMenuProps {
   whatsappNumber?: string;
 }
 
-function createPhoneHref(phoneNumber: string): string {
-  const cleanedNumber = phoneNumber.replace(/[^\d+]/g, "");
-
-  return `tel:${cleanedNumber}`;
-}
-
-function createWhatsAppHref(whatsappNumber: string): string {
-  const cleanedNumber = whatsappNumber.replace(/\D/g, "");
-
-  const message = encodeURIComponent(
-    "Hello, I would like information about cottage availability at Green View Cottages.",
-  );
-
-  return `https://wa.me/${cleanedNumber}?text=${message}`;
-}
-
 export default function MobileMenu({
   isOpen,
   onClose,
@@ -48,6 +37,9 @@ export default function MobileMenu({
   phoneNumber = "",
   whatsappNumber = "",
 }: MobileMenuProps) {
+  const panelRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -57,17 +49,45 @@ export default function MobileMenu({
 
     document.body.style.overflow = "hidden";
 
-    function handleEscape(event: KeyboardEvent) {
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !panelRef.current) {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+
+      if (focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     }
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen, onClose]);
 
@@ -90,6 +110,7 @@ export default function MobileMenu({
       />
 
       <aside
+        ref={panelRef}
         className={[
           "absolute right-0 top-0 flex h-full w-[88%] max-w-sm flex-col",
           "bg-[var(--surface)] shadow-[var(--shadow-lg)]",
@@ -107,6 +128,7 @@ export default function MobileMenu({
           </div>
 
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
@@ -165,7 +187,10 @@ export default function MobileMenu({
 
             {whatsappNumber ? (
               <Button
-                href={createWhatsAppHref(whatsappNumber)}
+                href={createWhatsAppHref(
+                  createGeneralWhatsAppMessage(),
+                  whatsappNumber,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 fullWidth

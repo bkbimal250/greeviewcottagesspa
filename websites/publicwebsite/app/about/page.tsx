@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   FaArrowRight,
   FaBed,
@@ -16,6 +17,21 @@ import {
 } from "react-icons/fa";
 
 import Container from "@/components/layout/Container";
+import {
+  contactConfig,
+  createGeneralWhatsAppMessage,
+  createPhoneHref,
+  createWhatsAppHref,
+} from "@/lib/config/contact";
+
+export const metadata: Metadata = {
+  title: "About Green View Cottages & Spa",
+  description:
+    "Learn about Green View Cottages & Spa, a peaceful cottage stay in Mount Abu focused on comfort, warm hospitality and direct booking assistance.",
+  alternates: {
+    canonical: "/about",
+  },
+};
 
 const highlights = [
   {
@@ -76,29 +92,9 @@ const values = [
   },
 ];
 
-function createPhoneHref(phoneNumber: string): string {
-  return `tel:${phoneNumber.replace(/[^\d+]/g, "")}`;
-}
-
-function createWhatsAppHref(
-  whatsappNumber: string,
-): string {
-  const cleanedNumber =
-    whatsappNumber.replace(/\D/g, "");
-
-  const message = encodeURIComponent(
-    "Hello, I would like to know more about Green View Cottages and check availability.",
-  );
-
-  return `https://wa.me/${cleanedNumber}?text=${message}`;
-}
-
 export default function AboutPage() {
-  const phoneNumber =
-    process.env.NEXT_PUBLIC_PROPERTY_PHONE || "";
-
-  const whatsappNumber =
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+  const phoneNumber = contactConfig.displayPhone;
+  const whatsappNumber = contactConfig.whatsappNumber;
 
   return (
     <main className="overflow-hidden bg-white">
@@ -479,6 +475,7 @@ export default function AboutPage() {
                 {whatsappNumber ? (
                   <a
                     href={createWhatsAppHref(
+                      createGeneralWhatsAppMessage(),
                       whatsappNumber,
                     )}
                     target="_blank"

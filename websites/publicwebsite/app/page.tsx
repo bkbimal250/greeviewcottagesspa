@@ -12,6 +12,7 @@ import Button from "@/components/common/Button";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import CottageGrid from "@/components/cottages/CottageGrid";
 import Container from "@/components/layout/Container";
+import JsonLd from "@/components/seo/JsonLd";
 import NearbyPlaces, {
   type NearbyPlace,
 } from "@/components/property/NearbyPlaces";
@@ -28,13 +29,14 @@ import {
   toCottageCard,
 } from "@/lib/api/cottages";
 import { getPublicProperty } from "@/lib/api/property";
+import { absoluteUrl, siteConfig } from "@/lib/config/contact";
 import type { CottageCardData } from "@/components/cottages/CottageCard";
 import type { Property } from "@/types/property";
 
 export const metadata: Metadata = {
-  title: "Green View Cottages in Mount Abu",
+  title: "Green View Cottages & Spa | Nature Stay and Wellness Retreat",
   description:
-    "Explore Green View Cottages property details, cottages, availability and online booking.",
+    "Discover peaceful cottages, direct booking assistance and relaxing nature stays at Green View Cottages & Spa in Mount Abu.",
   alternates: {
     canonical: "/",
   },
@@ -866,6 +868,16 @@ export default async function HomePage() {
 
   const nearbyPlaces =
     buildNearbyPlaces(property);
+  const homeSchema = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    telephone: phoneNumber || undefined,
+    address: location || undefined,
+    image: absoluteUrl(property.cover_image || property.thumbnail || "/images/property-cover.jpg"),
+    description: primaryDescription,
+  };
 
   return (
     <>
@@ -984,6 +996,8 @@ export default async function HomePage() {
       <FinalBookingCta
         phoneNumber={phoneNumber}
       />
+
+      <JsonLd data={homeSchema} />
     </>
   );
 }

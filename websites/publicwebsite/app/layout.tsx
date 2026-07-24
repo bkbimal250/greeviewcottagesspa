@@ -4,6 +4,8 @@ import { ToastContainer } from "react-toastify";
 
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, contactConfig, siteConfig } from "@/lib/config/contact";
 
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
@@ -20,19 +22,18 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://greencottagesandspa.in";
+const siteUrl = siteConfig.url;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
-    default: "Green View Cottages | Cottage Stay in Mount Abu",
-    template: "%s | Green View Cottages",
+    default: "Green View Cottages & Spa | Nature Stay and Wellness Retreat",
+    template: "%s | Green View Cottages & Spa",
   },
 
   description:
-    "Book a peaceful cottage stay at Green View Cottages in Dhundai, Mount Abu, Rajasthan. Check availability and reserve your cottage online.",
+    "Plan a peaceful cottage stay at Green View Cottages & Spa in Mount Abu with direct booking assistance, comfortable cottages and calm natural surroundings.",
 
   keywords: [
     "Green View Cottages",
@@ -43,16 +44,16 @@ export const metadata: Metadata = {
     "family cottages Mount Abu",
   ],
 
-  applicationName: "Green View Cottages",
+  applicationName: siteConfig.name,
 
   authors: [
     {
-      name: "Green View Cottages",
+      name: siteConfig.name,
     },
   ],
 
-  creator: "Green View Cottages",
-  publisher: "Green View Cottages",
+  creator: siteConfig.name,
+  publisher: siteConfig.name,
 
   alternates: {
     canonical: "/",
@@ -62,10 +63,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: "/",
-    siteName: "Green View Cottages",
-    title: "Green View Cottages | Cottage Stay in Mount Abu",
+    siteName: siteConfig.name,
+    title: "Green View Cottages & Spa | Nature Stay and Wellness Retreat",
     description:
-      "Check cottage availability and book your peaceful stay at Green View Cottages in Mount Abu.",
+      "Explore comfortable cottages, calm surroundings and direct booking assistance at Green View Cottages & Spa in Mount Abu.",
     images: [
       {
         url: "/images/property-cover.jpg",
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Green View Cottages",
+    title: "Green View Cottages & Spa",
     description:
       "Check availability and book a comfortable cottage stay in Mount Abu.",
     images: ["/images/property-cover.jpg"],
@@ -124,6 +125,24 @@ interface RootLayoutProps {
 export default function RootLayout({
   children,
 }: Readonly<RootLayoutProps>) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    telephone: contactConfig.displayPhone || undefined,
+    email: contactConfig.email || undefined,
+    address: contactConfig.address,
+    image: absoluteUrl("/images/property-cover.jpg"),
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.name,
+    url: siteConfig.url,
+  };
+
   return (
     <html
       lang="en"
@@ -140,6 +159,10 @@ export default function RootLayout({
           "antialiased",
         ].join(" ")}
       >
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
+
         <div className="flex min-h-screen flex-col">
           <Header />
 
@@ -149,6 +172,8 @@ export default function RootLayout({
 
           <Footer />
         </div>
+
+        <JsonLd data={[organizationSchema, websiteSchema]} />
 
         <ToastContainer
           position="top-right"

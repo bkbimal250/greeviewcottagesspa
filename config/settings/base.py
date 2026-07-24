@@ -93,6 +93,7 @@ LOCAL_APPS = [
     "apps.bookings",
     "apps.payments",
     "apps.notifications",
+    "apps.dining",
 ]
 
 INSTALLED_APPS = ADMIN_THEME_APPS + ["daphne"] + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

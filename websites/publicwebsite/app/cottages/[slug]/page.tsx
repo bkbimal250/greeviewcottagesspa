@@ -1,27 +1,25 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  FaArrowLeft,
-  FaCalendarAlt,
-  FaPhoneAlt,
-  FaWhatsapp,
-} from "react-icons/fa";
+import { FaCalendarAlt } from "react-icons/fa";
 
 import Button from "@/components/common/Button";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
+import ContactActions from "@/components/common/ContactActions";
 import Price from "@/components/common/Price";
 import CottageAvailabilityCalendar from "@/components/cottages/CottageAvailabilityCalendar";
 import CottageDetails from "@/components/cottages/CottageDetails";
 import CottagePageTabs from "@/components/cottages/CottagePageTabs";
 import PhotosByArea from "@/components/cottages/PhotosByArea";
 import Container from "@/components/layout/Container";
+import JsonLd from "@/components/seo/JsonLd";
 import {
   getCottageAvailabilityCalendar,
   getCottageBySlug,
 } from "@/lib/api/cottages";
 import { getPublicProperty } from "@/lib/api/property";
 import { withImageFallback } from "@/lib/utils/images";
+import { absoluteUrl, siteConfig } from "@/lib/config/contact";
 
 interface Cottage {
   id: string;
@@ -147,23 +145,6 @@ function cleanPublicText(value?: string): string | undefined {
   return cleanedValue || undefined;
 }
 
-function createPhoneHref(phoneNumber: string): string {
-  return `tel:${phoneNumber.replace(/[^\d+]/g, "")}`;
-}
-
-function createWhatsAppHref(
-  whatsappNumber: string,
-  cottageName: string,
-): string {
-  const cleanedNumber = whatsappNumber.replace(/\D/g, "");
-
-  const message = encodeURIComponent(
-    `Hello, I would like information about ${cottageName}.`,
-  );
-
-  return `https://wa.me/${cleanedNumber}?text=${message}`;
-}
-
 function cleanImageList(images?: string[]): string[] {
   return Array.from(
     new Set(
@@ -263,12 +244,6 @@ export default async function CottageDetailPage({
     cottage.check_out_time || cottage.property?.check_out_time,
   );
 
-  const phoneNumber =
-    property?.public_phone || property?.primary_phone || "";
-
-  const whatsappNumber =
-    property?.whatsapp_number || "";
-
   const bedroomImages = cleanImageList(cottage.bed_images);
   const bathroomImages = cleanImageList(cottage.bathroom_images);
   const interiorImages = cleanImageList(cottage.interior_images);
@@ -338,18 +313,40 @@ export default async function CottageDetailPage({
   const bookingHref = selectedDateQuery
     ? `/booking/${cottage.id}?${selectedDateQuery}`
     : availabilityHref;
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Cottages", href: "/cottages" },
+    { label: cottage.name },
+  ];
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      item: item.href ? absoluteUrl(item.href) : absoluteUrl(`/cottages/${cottage.slug}`),
+    })),
+  };
+  const cottageSchema = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: `${cottage.name} | ${siteConfig.name}`,
+    url: absoluteUrl(`/cottages/${cottage.slug}`),
+    image: absoluteUrl(
+      withImageFallback(
+        cottage.cover_image || cottage.thumbnail,
+        "/images/cottage-placeholder.jpg",
+      ),
+    ),
+    address: propertyLocation || undefined,
+  };
 
   return (
     <>
       <section className="bg-white py-5">
         <Container>
-          <Link
-            href="/cottages"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] transition hover:text-[var(--primary-hover)]"
-          >
-            <FaArrowLeft aria-hidden="true" />
-            Back to Cottages
-          </Link>
+          <Breadcrumbs items={breadcrumbItems} />
         </Container>
       </section>
 
@@ -424,11 +421,19 @@ export default async function CottageDetailPage({
               ) : null}
             </div>
 
-            <aside className="lg:sticky lg:top-24 lg:self-start">
+            <aside className="lg:sticky lg:top-28 lg:self-start">
               <div className="card overflow-hidden">
                 <div className="border-b border-[var(--border)] p-6">
                   <p className="text-sm font-semibold uppercase tracking-wider text-[var(--primary)]">
-                    Cottage pricing
+                    Direct booking assistance
+                  </p>
+
+                  <h2 className="mt-2 text-2xl font-bold leading-tight">
+                    Plan your stay in {cottage.name}
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                    Check live dates, book online, or speak with the property team before confirming.
                   </p>
 
                   <div className="mt-4">
@@ -535,32 +540,12 @@ export default async function CottageDetailPage({
                     Open Availability Calendar
                   </Button>
 
-                  {phoneNumber ? (
-                    <Button
-                      href={createPhoneHref(phoneNumber)}
-                      variant="secondary"
-                      fullWidth
-                      leftIcon={<FaPhoneAlt aria-hidden="true" />}
-                    >
-                      Call Property
-                    </Button>
-                  ) : null}
-
-                  {whatsappNumber ? (
-                    <Button
-                      href={createWhatsAppHref(
-                        whatsappNumber,
-                        cottage.name,
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      variant="ghost"
-                      fullWidth
-                      leftIcon={<FaWhatsapp aria-hidden="true" />}
-                    >
-                      Ask on WhatsApp
-                    </Button>
-                  ) : null}
+                  <ContactActions
+                    cottageName={cottage.name}
+                    layout="stack"
+                    whatsappLabel="Ask About This Cottage"
+                    callLabel="Call for Availability"
+                  />
                 </div>
               </div>
 
@@ -578,6 +563,8 @@ export default async function CottageDetailPage({
           </div>
         </Container>
       </section>
+
+      <JsonLd data={[breadcrumbSchema, cottageSchema]} />
     </>
   );
 }

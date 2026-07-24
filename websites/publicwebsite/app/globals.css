@@ -35,6 +35,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 9rem;
 }
 
 body {
@@ -320,6 +321,36 @@ button:disabled {
   outline-offset: 3px;
 }
 
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1000;
+  transform: translateY(-150%);
+  border-radius: 999px;
+  background: var(--foreground);
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 768px) {
   .section {
     padding-block: 3rem;
@@ -366,6 +397,132 @@ button:disabled {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
+    animation: none;
+  }
+}
+
+.food-hero-pattern {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0,
+      rgba(255, 255, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 22px
+    ),
+    linear-gradient(
+      45deg,
+      rgba(216, 199, 161, 0.08) 0,
+      rgba(216, 199, 161, 0.08) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  background-size: 44px 44px, 56px 56px;
+  animation: food-pattern-drift 18s linear infinite;
+}
+
+.food-reveal {
+  animation: food-reveal 700ms ease both;
+}
+
+.food-float {
+  animation: food-float 5s ease-in-out infinite;
+}
+
+.food-card {
+  animation: food-card-rise 650ms ease both;
+}
+
+.food-price {
+  background:
+    linear-gradient(90deg, #1f2a22, #2f6b45, #1f2a22);
+  background-size: 180% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: food-price-shine 4s ease-in-out infinite;
+}
+
+.food-search-input:focus {
+  animation: food-search-pulse 900ms ease;
+}
+
+@keyframes food-pattern-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+
+  to {
+    background-position: 44px 44px, -56px 56px;
+  }
+}
+
+@keyframes food-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes food-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes food-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes food-price-shine {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes food-search-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.01);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .food-hero-pattern,
+  .food-reveal,
+  .food-float,
+  .food-card,
+  .food-price,
+  .food-search-input:focus {
     animation: none;
   }
 }

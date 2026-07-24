@@ -12,6 +12,12 @@ import {
 import { HiOutlineSparkles } from "react-icons/hi2";
 
 import Container from "./Container";
+import {
+  contactConfig,
+  createGeneralWhatsAppMessage,
+  createPhoneHref,
+  createWhatsAppHref,
+} from "@/lib/config/contact";
 
 interface FooterProps {
   propertyName?: string;
@@ -62,49 +68,20 @@ const legalLinks = [
   },
 ];
 
-function createPhoneHref(
-  phoneNumber: string,
-): string {
-  return `tel:${phoneNumber.replace(
-    /[^\d+]/g,
-    "",
-  )}`;
-}
-
-function createWhatsAppHref(
-  whatsappNumber: string,
-  propertyName: string,
-): string {
-  const cleanedNumber =
-    whatsappNumber.replace(/\D/g, "");
-
-  const message = encodeURIComponent(
-    `Hello, I would like to check cottage availability and know more about ${propertyName}.`,
-  );
-
-  return `https://wa.me/${cleanedNumber}?text=${message}`;
-}
-
 export default function Footer({
-  propertyName = "Green View Cottages",
+  propertyName = contactConfig.propertyName,
   logoImage = "/images/navbar.png",
-  address = "Dhundai, Mount Abu, Sirohi, Rajasthan - 307501",
-  phoneNumber =
-    process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
-  whatsappNumber =
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
-  email =
-    process.env.NEXT_PUBLIC_PROPERTY_EMAIL || "",
+  address = contactConfig.address,
+  phoneNumber = contactConfig.displayPhone,
+  whatsappNumber = contactConfig.whatsappNumber,
+  email = contactConfig.email,
   checkInTime = "10:00 AM",
   checkOutTime = "10:00 AM",
 }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   const whatsappHref = whatsappNumber
-    ? createWhatsAppHref(
-        whatsappNumber,
-        propertyName,
-      )
+    ? createWhatsAppHref(createGeneralWhatsAppMessage(), whatsappNumber)
     : "";
 
   return (

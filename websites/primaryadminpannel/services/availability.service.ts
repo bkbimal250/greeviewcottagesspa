@@ -1,5 +1,6 @@
 import cottageService from "@/services/cottage.service";
 import type { PaginatedResponse, PaginationParams } from "@/types/api";
+import type { AvailabilityFilters } from "@/types/availability";
 import type {
   AvailabilityQuery,
   AvailableCottage,
@@ -16,7 +17,7 @@ export const availabilityService = {
   },
 
   async getBlocks(
-    params?: PaginationParams,
+    params?: PaginationParams & AvailabilityFilters,
   ): Promise<PaginatedResponse<CottageBlock>> {
     return cottageService.getBlocks(params);
   },

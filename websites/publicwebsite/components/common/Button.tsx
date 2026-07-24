@@ -12,7 +12,9 @@ type ButtonVariant =
   | "secondary"
   | "light"
   | "danger"
-  | "ghost";
+  | "ghost"
+  | "whatsapp"
+  | "call";
 
 type ButtonSize = "sm" | "md" | "lg";
 
@@ -69,6 +71,14 @@ const variantClasses: Record<ButtonVariant, string> = {
     "bg-transparent text-[var(--foreground)] " +
     "hover:bg-[var(--surface-muted)] " +
     "focus-visible:ring-[var(--primary)]",
+
+  whatsapp:
+    "bg-[#1f9f57] text-white hover:bg-[#178548] " +
+    "focus-visible:ring-[#1f9f57]",
+
+  call:
+    "border border-[var(--primary)] bg-white text-[var(--primary)] " +
+    "hover:bg-[var(--primary-light)] focus-visible:ring-[var(--primary)]",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

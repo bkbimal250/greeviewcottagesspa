@@ -49,6 +49,11 @@ const navigationItems: SidebarItem[] = [
     icon: FaHotel,
   },
   {
+    label: "Foods",
+    href: "/food",
+    icon: FaHotel,
+  },
+  {
     label: "Availability",
     href: "/availability",
     icon: FaCalendarTimes,
@@ -196,14 +201,14 @@ export default function AdminSidebar({
                     "transition-colors",
                     active
                       ? [
-                          "bg-[var(--primary-light)]",
-                          "text-[var(--primary)]",
-                        ].join(" ")
+                        "bg-[var(--primary-light)]",
+                        "text-[var(--primary)]",
+                      ].join(" ")
                       : [
-                          "text-gray-600",
-                          "hover:bg-[var(--surface-muted)]",
-                          "hover:text-[var(--foreground)]",
-                        ].join(" "),
+                        "text-gray-600",
+                        "hover:bg-[var(--surface-muted)]",
+                        "hover:text-[var(--foreground)]",
+                      ].join(" "),
                   ].join(" ")}
                 >
                   <span
@@ -213,9 +218,9 @@ export default function AdminSidebar({
                       active
                         ? "bg-white text-[var(--primary)] shadow-sm"
                         : [
-                            "bg-gray-100 text-gray-500",
-                            "group-hover:bg-white",
-                          ].join(" "),
+                          "bg-gray-100 text-gray-500",
+                          "group-hover:bg-white",
+                        ].join(" "),
                     ].join(" ")}
                   >
                     <Icon aria-hidden="true" />

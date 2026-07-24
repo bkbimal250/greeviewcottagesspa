@@ -3,11 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FaBars,
-  FaCalendarAlt,
-  FaClock,
+  FaLeaf,
   FaPhoneAlt,
   FaWhatsapp,
 } from "react-icons/fa";
@@ -15,6 +14,12 @@ import { HiOutlineSparkles } from "react-icons/hi2";
 
 import Container from "./Container";
 import MobileMenu from "./MobileMenu";
+import {
+  contactConfig,
+  createGeneralWhatsAppMessage,
+  createPhoneHref,
+  createWhatsAppHref,
+} from "@/lib/config/contact";
 
 interface HeaderProps {
   propertyName?: string;
@@ -37,6 +42,10 @@ const navigationItems = [
     href: "/cottages",
   },
   {
+    label: "Foods",
+    href: "/foods",
+  },
+  {
     label: "Manage Booking",
     href: "/manage-booking",
   },
@@ -45,42 +54,6 @@ const navigationItems = [
     href: "/contact",
   },
 ];
-
-function createPhoneHref(phoneNumber: string): string {
-  const cleanedNumber = phoneNumber.replace(/[^\d+]/g, "");
-
-  return `tel:${cleanedNumber}`;
-}
-
-function createWhatsAppHref(
-  whatsappNumber: string,
-  propertyName: string,
-): string {
-  const cleanedNumber = whatsappNumber.replace(/\D/g, "");
-
-  const message = encodeURIComponent(
-    `Hello, I would like to check cottage availability at ${propertyName}.`,
-  );
-
-  return `https://wa.me/${cleanedNumber}?text=${message}`;
-}
-
-function formatDisplayDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatDisplayTime(date: Date): string {
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).format(date);
-}
 
 function isActiveNavigation(
   pathname: string,
@@ -94,41 +67,18 @@ function isActiveNavigation(
 }
 
 export default function Header({
-  propertyName = "Green View Cottages",
+  propertyName = contactConfig.propertyName,
   logoImage = "/images/navbar.png",
-  phoneNumber =
-    process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
-  whatsappNumber =
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
+  phoneNumber = contactConfig.displayPhone,
+  whatsappNumber = contactConfig.whatsappNumber,
 }: HeaderProps) {
   const pathname = usePathname();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] =
     useState(false);
 
-  const [currentDate, setCurrentDate] =
-    useState<Date | null>(null);
-
-  useEffect(() => {
-    const frameId = window.requestAnimationFrame(() => {
-      setCurrentDate(new Date());
-    });
-
-    const timer = window.setInterval(() => {
-      setCurrentDate(new Date());
-    }, 1000);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearInterval(timer);
-    };
-  }, []);
-
   const whatsappHref = whatsappNumber
-    ? createWhatsAppHref(
-        whatsappNumber,
-        propertyName,
-      )
+    ? createWhatsAppHref(createGeneralWhatsAppMessage(), whatsappNumber)
     : "";
 
   return (
@@ -145,39 +95,18 @@ export default function Header({
           <Container>
             <div className="relative flex min-h-10 items-center justify-between gap-3 py-2">
               <div className="flex min-w-0 items-center gap-4 text-[11px] font-medium text-white/80 sm:text-xs">
-                {currentDate ? (
-                  <>
-                    <div className="hidden items-center gap-2 sm:flex">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/8">
-                        <FaCalendarAlt
-                          aria-hidden="true"
-                          className="text-[10px] text-[#d9bd7b]"
-                        />
-                      </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/8">
+                    <FaLeaf
+                      aria-hidden="true"
+                      className="text-[10px] text-[#d9bd7b]"
+                    />
+                  </span>
 
-                      <span className="whitespace-nowrap">
-                        {formatDisplayDate(currentDate)}
-                      </span>
-                    </div>
-
-                    <span className="hidden h-4 w-px bg-white/15 sm:block" />
-
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/8">
-                        <FaClock
-                          aria-hidden="true"
-                          className="text-[10px] text-[#d9bd7b]"
-                        />
-                      </span>
-
-                      <span className="whitespace-nowrap">
-                        {formatDisplayTime(currentDate)}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <span className="h-4 w-32 animate-pulse rounded-full bg-white/10" />
-                )}
+                  <span className="whitespace-nowrap">
+                    {contactConfig.businessHours}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-3 sm:gap-5">
@@ -428,8 +357,8 @@ export default function Header({
                         />
 
                         <span>
-                          Get 20% Discount on Your
-                          Booking
+                          Direct Booking Assistance
+                          Available
                         </span>
                       </div>
 
