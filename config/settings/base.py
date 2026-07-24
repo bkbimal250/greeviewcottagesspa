@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
+    DJANGO_DEBUG=(bool, False),
     ALLOWED_HOSTS=(
         list,
         [
@@ -18,29 +19,48 @@ env = environ.Env(
             "api.backend.greencottagesandspa.in",
         ],
     ),
+    DJANGO_ALLOWED_HOSTS=(
+        list,
+        [
+            "localhost",
+            "127.0.0.1",
+            "testserver",
+            "api.backend.greencottagesandspa.in",
+        ],
+    ),
     CORS_ALLOWED_ORIGINS=(
         list,
         [
             "https://greencottagesandspa.in",
+            "https://www.greencottagesandspa.in",
             "https://booking.greencottagesandspa.in",
-            "https://api.backend.greencottagesandspa.in",
         ],
     ),
     CSRF_TRUSTED_ORIGINS=(
         list,
         [
-            "https://greencottagesandspa.in",
-            "https://booking.greencottagesandspa.in",
             "https://api.backend.greencottagesandspa.in",
+            "https://greencottagesandspa.in",
+            "https://www.greencottagesandspa.in",
+            "https://booking.greencottagesandspa.in",
+        ],
+    ),
+    DJANGO_CSRF_TRUSTED_ORIGINS=(
+        list,
+        [
+            "https://api.backend.greencottagesandspa.in",
+            "https://greencottagesandspa.in",
+            "https://www.greencottagesandspa.in",
+            "https://booking.greencottagesandspa.in",
         ],
     ),
     SECURE_SSL_REDIRECT=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("SECRET_KEY", default="change-me-in-env")
-DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default=env("SECRET_KEY", default="change-me-in-env"))
+DEBUG = env.bool("DJANGO_DEBUG", default=env.bool("DEBUG", default=False))
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=env("ALLOWED_HOSTS"))
 
 ADMIN_THEME_APPS = [
     "adminlte4",
@@ -63,6 +83,7 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "storages",
 ]
 
 LOCAL_APPS = [
@@ -120,11 +141,14 @@ def database_config() -> dict:
 
     return {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB", default="green_view_cottages"),
-        "USER": env("POSTGRES_USER", default="postgres"),
-        "PASSWORD": env("POSTGRES_PASSWORD", default=""),
-        "HOST": env("POSTGRES_HOST", default="localhost"),
-        "PORT": env.int("POSTGRES_PORT", default=5432),
+        "NAME": env("DATABASE_NAME", default=env("POSTGRES_DB", default="green_view_cottages")),
+        "USER": env("DATABASE_USER", default=env("POSTGRES_USER", default="postgres")),
+        "PASSWORD": env("DATABASE_PASSWORD", default=env("POSTGRES_PASSWORD", default="")),
+        "HOST": env("DATABASE_HOST", default=env("POSTGRES_HOST", default="localhost")),
+        "PORT": env.int("DATABASE_PORT", default=env.int("POSTGRES_PORT", default=5432)),
+        "OPTIONS": {
+            "connect_timeout": env.int("DATABASE_CONNECT_TIMEOUT", default=10),
+        },
     }
 
 
@@ -147,7 +171,12 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [env("CHANNEL_REDIS_URL", default=env("REDIS_URL", default="redis://localhost:6379/2"))],
+            "hosts": [
+                env(
+                    "CHANNEL_REDIS_URL",
+                    default=env("REDIS_URL", default="redis://localhost:6379/2"),
+                )
+            ],
             "capacity": env.int("CHANNEL_LAYER_CAPACITY", default=1500),
             "expiry": env.int("CHANNEL_LAYER_EXPIRY", default=10),
         },
@@ -227,6 +256,88 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Backend API for cottage availability, booking and administration.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "BookingStatusEnum": [
+            ("pending", "Pending"),
+            ("confirmed", "Confirmed"),
+            ("checked_in", "Checked In"),
+            ("checked_out", "Checked Out"),
+            ("completed", "Completed"),
+            ("cancelled", "Cancelled"),
+            ("no_show", "No Show"),
+        ],
+        "BookingPaymentStatusEnum": [
+            ("unpaid", "Unpaid"),
+            ("partially_paid", "Partially Paid"),
+            ("paid", "Paid"),
+            ("failed", "Failed"),
+            ("refunded", "Refunded"),
+        ],
+        "BookingPaymentMethodEnum": [
+            ("pay_at_property", "Pay at Property"),
+            ("cash", "Cash"),
+            ("upi", "UPI"),
+            ("card", "Card"),
+            ("bank_transfer", "Bank Transfer"),
+            ("online_gateway", "Online Gateway"),
+        ],
+        "BookingCancellationStatusEnum": [
+            ("pending", "Pending"),
+            ("approved", "Approved"),
+            ("rejected", "Rejected"),
+        ],
+        "PropertyStatusEnum": [
+            ("draft", "Draft"),
+            ("active", "Active"),
+            ("inactive", "Inactive"),
+            ("temporarily_closed", "Temporarily Closed"),
+        ],
+        "CottageStatusEnum": [
+            ("active", "Active"),
+            ("inactive", "Inactive"),
+            ("maintenance", "Maintenance"),
+            ("blocked", "Blocked"),
+        ],
+        "CottageAvailabilityHoldStatusEnum": [
+            ("active", "Active"),
+            ("released", "Released"),
+            ("converted", "Converted to Booking"),
+        ],
+        "PaymentStatusEnum": [
+            ("pending", "Pending"),
+            ("successful", "Successful"),
+            ("failed", "Failed"),
+            ("refunded", "Refunded"),
+        ],
+        "PaymentProviderEnum": [
+            ("manual", "Manual"),
+            ("cash", "Cash"),
+            ("upi", "UPI"),
+            ("card", "Card"),
+            ("bank_transfer", "Bank Transfer"),
+            ("razorpay", "Razorpay"),
+            ("online_gateway", "Online Gateway"),
+        ],
+        "PaymentOrderStatusEnum": [
+            ("created", "Created"),
+            ("attempted", "Attempted"),
+            ("paid", "Paid"),
+            ("failed", "Failed"),
+            ("expired", "Expired"),
+            ("cancelled", "Cancelled"),
+        ],
+        "PaymentOrderProviderEnum": [
+            ("razorpay", "Razorpay"),
+            ("upi_qr", "UPI QR"),
+        ],
+        "NotificationStatusEnum": [
+            ("queued", "Queued"),
+            ("sent", "Sent"),
+            ("delivered", "Delivered"),
+            ("read", "Read"),
+            ("failed", "Failed"),
+        ],
+    },
 }
 
 HEALTH_CHECK_CACHE_KEY = "health-check"
@@ -256,17 +367,27 @@ AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME", default="")
 AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="")
 AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN", default="")
 AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default="")
-IMAGE_UPLOAD_MAX_SIZE_BYTES = env.int("IMAGE_UPLOAD_MAX_SIZE_MB", default=10) * 1024 * 1024
+IMAGE_UPLOAD_MAX_SIZE_MB = env.int("IMAGE_UPLOAD_MAX_SIZE_MB", default=10)
+IMAGE_UPLOAD_MAX_SIZE_BYTES = IMAGE_UPLOAD_MAX_SIZE_MB * 1024 * 1024
 IMAGE_MAX_WIDTH = env.int("IMAGE_MAX_WIDTH", default=2000)
 IMAGE_MAX_HEIGHT = env.int("IMAGE_MAX_HEIGHT", default=2000)
 IMAGE_WEBP_QUALITY = env.int("IMAGE_WEBP_QUALITY", default=82)
 IMAGE_WEBP_METHOD = env.int("IMAGE_WEBP_METHOD", default=6)
-IMAGE_S3_CACHE_CONTROL = env("IMAGE_S3_CACHE_CONTROL", default="public, max-age=31536000, immutable")
+IMAGE_S3_CACHE_CONTROL = env(
+    "IMAGE_S3_CACHE_CONTROL", default="public, max-age=31536000, immutable"
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
-CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
+CSRF_TRUSTED_ORIGINS = env(
+    "DJANGO_CSRF_TRUSTED_ORIGINS",
+    default=env("CSRF_TRUSTED_ORIGINS"),
+)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = env("SESSION_COOKIE_SAMESITE", default="Lax")
+CSRF_COOKIE_SAMESITE = env("CSRF_COOKIE_SAMESITE", default="Lax")
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="reservations@greenviewcottages.local")
 ADMIN_NOTIFICATION_EMAIL = env("ADMIN_NOTIFICATION_EMAIL", default="")

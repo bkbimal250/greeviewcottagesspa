@@ -104,6 +104,16 @@ class AvailableCottageSerializer(serializers.Serializer):
     pricing = serializers.DictField()
 
 
+class CottageAvailabilityCalendarQuerySerializer(serializers.Serializer):
+    days = serializers.IntegerField(min_value=1, max_value=31, required=False, default=31)
+    month = serializers.RegexField(
+        regex=r"^\d{4}-\d{2}$",
+        required=False,
+        help_text="Calendar month in YYYY-MM format.",
+    )
+    start_date = serializers.DateField(required=False)
+
+
 class CottageHoldCreateSerializer(serializers.Serializer):
     cottage_id = serializers.UUIDField()
     check_in = serializers.DateField()

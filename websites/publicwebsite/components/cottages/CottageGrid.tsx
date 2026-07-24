@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   FaArrowRight,
   FaHotel,
@@ -118,7 +119,7 @@ export default function CottageGrid({
                 Select a cottage to view full details, amenities, pricing and available dates.
               </p>
 
-              <a
+              <Link
                 href="/cottages"
                 className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[var(--primary)] transition hover:gap-3"
               >
@@ -127,7 +128,7 @@ export default function CottageGrid({
                   aria-hidden="true"
                   className="text-xs"
                 />
-              </a>
+              </Link>
             </div>
           </>
         )}

@@ -24,6 +24,9 @@ staticfiles/
 .env
 .env.*
 !.env.example
+!.env.production.example
+!websites/primaryadminpannel/.env.production.example
+!websites/publicwebsite/.env.production.example
 .venv/
 venv/
 env/

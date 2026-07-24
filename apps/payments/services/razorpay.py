@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 from datetime import timedelta
 from decimal import Decimal
 from urllib import request
@@ -16,6 +17,8 @@ from django.utils import timezone
 from apps.bookings.models import Booking
 from apps.payments.models import Payment, PaymentOrder
 from apps.payments.services.payments import PaymentService
+
+logger = logging.getLogger(__name__)
 
 
 class RazorpayService:
@@ -130,7 +133,10 @@ class RazorpayService:
             with request.urlopen(http_request, timeout=15) as response:
                 return json.loads(response.read().decode("utf-8"))
         except Exception as exc:
-            raise ValidationError({"razorpay": f"Razorpay request failed: {exc}"})
+            logger.exception("Razorpay request failed for path %s", path)
+            raise ValidationError(
+                {"razorpay": "Unable to start online payment. Please try again."}
+            ) from exc
 
     @staticmethod
     def verify_payment_signature(*, order_id: str, payment_id: str, signature: str) -> bool:

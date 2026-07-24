@@ -110,13 +110,16 @@ export default function Header({
     useState<Date | null>(null);
 
   useEffect(() => {
-    setCurrentDate(new Date());
+    const frameId = window.requestAnimationFrame(() => {
+      setCurrentDate(new Date());
+    });
 
     const timer = window.setInterval(() => {
       setCurrentDate(new Date());
     }, 1000);
 
     return () => {
+      window.cancelAnimationFrame(frameId);
       window.clearInterval(timer);
     };
   }, []);

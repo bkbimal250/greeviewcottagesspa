@@ -21,6 +21,7 @@ from apps.cottages.models import (
 from apps.cottages.serializers import (
     AvailabilityQuerySerializer,
     AvailableCottageSerializer,
+    CottageAvailabilityCalendarQuerySerializer,
     CottageAdminSerializer,
     CottageBlockSerializer,
     CottageDetailSerializer,
@@ -129,6 +130,7 @@ class AvailableCottageView(generics.GenericAPIView):
 
 @extend_schema(tags=["Cottages"])
 class CottageAvailabilityCalendarView(generics.GenericAPIView):
+    serializer_class = CottageAvailabilityCalendarQuerySerializer
     authentication_classes = []
     permission_classes = []
     throttle_scope = "availability"

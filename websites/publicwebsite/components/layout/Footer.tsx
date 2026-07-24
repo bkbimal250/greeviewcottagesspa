@@ -439,7 +439,7 @@ export default function Footer({
             <span className="hidden h-1 w-1 rounded-full bg-[#b89654] sm:block" />
 
             <span>
-              Wellness & Spa coming soon
+              Green View Cottages
             </span>
           </div>
         </div>
