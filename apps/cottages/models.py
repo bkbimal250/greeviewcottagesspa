@@ -124,8 +124,8 @@ class Cottage(BaseModel):
     )
     minimum_nights = models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1)])
 
-    thumbnail = models.ImageField(upload_to=cottage_thumbnail_upload_path, null=True, blank=True)
-    cover_image = models.ImageField(upload_to=cottage_cover_upload_path, null=True, blank=True)
+    thumbnail = models.ImageField(upload_to=cottage_thumbnail_upload_path, max_length=500, null=True, blank=True)
+    cover_image = models.ImageField(upload_to=cottage_cover_upload_path, max_length=500, null=True, blank=True)
     bed_images = models.JSONField(default=list, blank=True, validators=[validate_string_list])
     bathroom_images = models.JSONField(default=list, blank=True, validators=[validate_string_list])
     interior_images = models.JSONField(default=list, blank=True, validators=[validate_string_list])
