@@ -30,6 +30,27 @@ class PropertySetupTests(SimpleTestCase):
         self.assertNotIn("admin_notes", serializer.fields)
         self.assertIn("full_address", serializer.fields)
         self.assertIn("gallery_images", serializer.fields)
+        self.assertIn("allowed_payment_methods", serializer.fields)
+
+    def test_public_serializer_returns_allowed_payment_methods(self):
+        property_obj = Property(
+            name="Hotel Green View Cottages",
+            pay_at_property_allowed=True,
+            online_payment_enabled=False,
+        )
+
+        data = PropertyPublicSerializer(property_obj).data
+
+        self.assertEqual(data["allowed_payment_methods"], ["pay_at_property"])
+
+        property_obj.online_payment_enabled = True
+
+        data = PropertyPublicSerializer(property_obj).data
+
+        self.assertEqual(
+            data["allowed_payment_methods"],
+            ["pay_at_property", "online_gateway"],
+        )
 
     def test_admin_serializers_support_update_surfaces(self):
         detail_serializer = PropertyAdminSerializer()

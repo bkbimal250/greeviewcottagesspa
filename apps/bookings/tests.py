@@ -149,6 +149,10 @@ class BookingAppTests(TestCase):
             Decimal(response.data["data"]["payment_options"]["full_online_payment_amount"]),
             Decimal(response.data["data"]["pricing"]["grand_total"]),
         )
+        self.assertEqual(
+            response.data["data"]["payment_options"]["allowed_payment_methods"],
+            [Booking.PaymentMethod.PAY_AT_PROPERTY],
+        )
 
     def test_booking_quote_rejects_invalid_guest_capacity(self):
         response = self.client.post(

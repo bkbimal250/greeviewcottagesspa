@@ -38,6 +38,11 @@ import type {
   RazorpayCheckoutResponse,
   RazorpayFailureResponse,
 } from "@/types/payment";
+import type {
+  BookingCreatePayload,
+  NotificationChannel,
+  WebsiteBookingPaymentMethod,
+} from "@/types/booking";
 
 interface Cottage {
   id: string;
@@ -54,6 +59,9 @@ interface Cottage {
   sunday_price: string;
   thumbnail?: string | null;
   status: string;
+  pay_at_property_allowed?: boolean;
+  online_payment_enabled?: boolean;
+  allowed_payment_methods?: WebsiteBookingPaymentMethod[];
 }
 
 interface CottageAvailability {
@@ -120,15 +128,25 @@ interface BookingFormValues {
   guest_country: string;
   guest_pincode: string;
   expected_arrival_time: string;
-  payment_method: string;
+  payment_method: WebsiteBookingPaymentMethod;
   special_request: string;
   whatsapp_opt_in: boolean;
   email_opt_in: boolean;
   sms_opt_in: boolean;
-  preferred_notification_channel: string;
+  preferred_notification_channel: NotificationChannel;
 }
 
 type FieldErrors = Partial<Record<keyof BookingFormValues, string>>;
+
+type PaymentOption = {
+  label: string;
+  value: WebsiteBookingPaymentMethod;
+};
+
+const paymentMethodLabels: Record<WebsiteBookingPaymentMethod, string> = {
+  online_gateway: "Book online with Razorpay",
+  pay_at_property: "Pay at property",
+};
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -151,6 +169,30 @@ const initialFormValues: BookingFormValues = {
   sms_opt_in: true,
   preferred_notification_channel: "all",
 };
+
+function getAllowedPaymentMethods(
+  cottage: Cottage | null,
+): WebsiteBookingPaymentMethod[] {
+  if (!cottage) {
+    return [];
+  }
+
+  if (Array.isArray(cottage.allowed_payment_methods)) {
+    return cottage.allowed_payment_methods.filter(
+      (method): method is WebsiteBookingPaymentMethod =>
+        method === "pay_at_property" || method === "online_gateway",
+    );
+  }
+
+  const methods: WebsiteBookingPaymentMethod[] = [];
+  if (cottage.pay_at_property_allowed) {
+    methods.push("pay_at_property");
+  }
+  if (cottage.online_payment_enabled) {
+    methods.push("online_gateway");
+  }
+  return methods;
+}
 
 let razorpayScriptPromise: Promise<void> | null = null;
 
@@ -301,7 +343,7 @@ async function fetchWithTimeout(
 
 async function postEnvelope<T>(
   path: string,
-  payload: Record<string, unknown>,
+  payload: unknown,
   timeoutMs = 45000,
 ): Promise<T> {
   const response = await fetchWithTimeout(path, {
@@ -317,9 +359,17 @@ async function postEnvelope<T>(
   const result = (await response.json()) as ApiResponse<T>;
 
   if (!response.ok || !result.success) {
+    const paymentMethodError = result.errors?.payment_method;
+    const errorMessage =
+      (Array.isArray(paymentMethodError)
+        ? paymentMethodError[0]
+        : paymentMethodError) ||
+      result.message ||
+      "Unable to create booking.";
+
     throw new Error(
-      firstError(result.errors) ||
-        result.message ||
+      errorMessage ||
+        firstError(result.errors) ||
         "Request could not be completed.",
     );
   }
@@ -451,6 +501,25 @@ export default function BookingPage() {
       children: String(children),
     }).toString();
   }, [adults, checkIn, checkOut, children]);
+
+  const allowedPaymentMethods = useMemo(
+    () => getAllowedPaymentMethods(cottage),
+    [cottage],
+  );
+
+  const paymentOptions = useMemo<PaymentOption[]>(
+    () =>
+      allowedPaymentMethods.map((method) => ({
+        value: method,
+        label: paymentMethodLabels[method],
+      })),
+    [allowedPaymentMethods],
+  );
+
+  const selectedPaymentMethod =
+    allowedPaymentMethods.includes(formValues.payment_method)
+      ? formValues.payment_method
+      : allowedPaymentMethods[0];
 
   function updateBookingGuestCount(
     field: "adults" | "children",
@@ -660,6 +729,14 @@ export default function BookingPage() {
     const errors: FieldErrors = {};
 
     if (
+      !selectedPaymentMethod ||
+      !allowedPaymentMethods.includes(selectedPaymentMethod)
+    ) {
+      errors.payment_method =
+        "Selected payment method is not available.";
+    }
+
+    if (
       formValues.email_opt_in &&
       !formValues.guest_email.trim()
     ) {
@@ -708,7 +785,14 @@ export default function BookingPage() {
     setPageError("");
 
     try {
-      const payload: Record<string, unknown> = {
+      if (
+        !selectedPaymentMethod ||
+        !allowedPaymentMethods.includes(selectedPaymentMethod)
+      ) {
+        throw new Error("Selected payment method is not available.");
+      }
+
+      const payload: BookingCreatePayload = {
         cottage_id: cottage.id,
         guest_name: formValues.guest_name.trim(),
         guest_phone: formValues.guest_phone.trim(),
@@ -730,7 +814,7 @@ export default function BookingPage() {
         children,
         expected_arrival_time:
           formValues.expected_arrival_time || undefined,
-        payment_method: formValues.payment_method,
+        payment_method: selectedPaymentMethod,
         special_request:
           formValues.special_request.trim() || undefined,
         whatsapp_opt_in: formValues.whatsapp_opt_in,
@@ -770,7 +854,7 @@ export default function BookingPage() {
         bookingId,
       )}?phone=${encodeURIComponent(formValues.guest_phone.trim())}`;
 
-      if (formValues.payment_method === "online_gateway") {
+      if (selectedPaymentMethod === "online_gateway") {
         try {
           toast.info("Booking saved. Opening secure payment...");
 
@@ -1227,10 +1311,10 @@ export default function BookingPage() {
                         formValues.preferred_notification_channel ===
                         "email"
                       ) {
-                        updateField(
-                          "preferred_notification_channel",
-                          "whatsapp",
-                        );
+                          updateField(
+                            "preferred_notification_channel",
+                            "whatsapp",
+                          );
                       }
                     } else {
                       updateField("email_opt_in", true);
@@ -1329,21 +1413,14 @@ export default function BookingPage() {
                 <Select
                   id="payment_method"
                   label="Payment method"
-                  value={formValues.payment_method}
-                  options={[
-                    {
-                      label: "Book online with Razorpay",
-                      value: "online_gateway",
-                    },
-                    {
-                      label: "Pay at property",
-                      value: "pay_at_property",
-                    },
-                  ]}
+                  value={selectedPaymentMethod || ""}
+                  options={paymentOptions}
+                  disabled={paymentOptions.length === 0}
+                  error={fieldErrors.payment_method}
                   onChange={(event) =>
                     updateField(
                       "payment_method",
-                      event.target.value,
+                      event.target.value as WebsiteBookingPaymentMethod,
                     )
                   }
                 />
@@ -1351,7 +1428,7 @@ export default function BookingPage() {
                 <div
                   className={[
                     "rounded-lg border p-4 sm:col-span-2",
-                    formValues.payment_method === "online_gateway"
+                    selectedPaymentMethod === "online_gateway"
                       ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
                       : "border-[var(--border)] bg-[var(--surface-muted)]",
                   ].join(" ")}
@@ -1361,7 +1438,7 @@ export default function BookingPage() {
                       aria-hidden="true"
                       className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]"
                     >
-                      {formValues.payment_method === "online_gateway" ? (
+                      {selectedPaymentMethod === "online_gateway" ? (
                         <FaCreditCard />
                       ) : (
                         <FaMoneyBillWave />
@@ -1370,13 +1447,13 @@ export default function BookingPage() {
 
                     <div>
                       <h3 className="font-bold text-[var(--foreground)]">
-                        {formValues.payment_method === "online_gateway"
+                        {selectedPaymentMethod === "online_gateway"
                           ? "Secure online payment"
                           : "Reserve now, pay later"}
                       </h3>
 
                       <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                        {formValues.payment_method === "online_gateway"
+                        {selectedPaymentMethod === "online_gateway"
                           ? "Your booking is saved first, then Razorpay opens with UPI, card and netbanking only. Payment is marked paid after backend verification."
                           : "Your booking will be saved with payment pending. The property team can collect payment directly."}
                       </p>
@@ -1519,7 +1596,7 @@ export default function BookingPage() {
                     onChange={(event) =>
                       updateField(
                         "preferred_notification_channel",
-                        event.target.value,
+                        event.target.value as NotificationChannel,
                       )
                     }
                   />
@@ -1547,21 +1624,21 @@ export default function BookingPage() {
                 fullWidth
                 loading={isSubmitting}
                 loadingText={
-                  formValues.payment_method === "online_gateway"
+                  selectedPaymentMethod === "online_gateway"
                     ? "Starting Payment..."
                     : "Creating Booking..."
                 }
                 leftIcon={
-                  formValues.payment_method === "online_gateway" ? (
+                  selectedPaymentMethod === "online_gateway" ? (
                     <FaCreditCard aria-hidden="true" />
                   ) : (
                     <FaCheckCircle aria-hidden="true" />
                   )
                 }
                 className="mt-6"
-                disabled={Boolean(pageError)}
+                disabled={Boolean(pageError) || paymentOptions.length === 0}
               >
-                {formValues.payment_method === "online_gateway"
+                {selectedPaymentMethod === "online_gateway"
                   ? "Create Booking & Pay"
                   : "Create Booking"}
               </Button>

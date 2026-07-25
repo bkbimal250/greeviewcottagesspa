@@ -50,6 +50,8 @@ class CottageListView(generics.ListAPIView):
             .only(
                 "id",
                 "property__name",
+                "property__pay_at_property_allowed",
+                "property__online_payment_enabled",
                 "name",
                 "slug",
                 "cottage_code",

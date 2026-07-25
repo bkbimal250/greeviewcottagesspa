@@ -1,3 +1,5 @@
+import type { WebsiteBookingPaymentMethod } from "@/types/booking";
+
 export interface CottageListItem {
   id: string;
   property: string;
@@ -21,6 +23,9 @@ export interface CottageListItem {
   status: "active" | "inactive" | "maintenance" | "blocked";
   is_featured: boolean;
   sort_order: number;
+  pay_at_property_allowed: boolean;
+  online_payment_enabled: boolean;
+  allowed_payment_methods: WebsiteBookingPaymentMethod[];
 }
 
 export interface CottageDetail extends CottageListItem {

@@ -16,18 +16,22 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Textarea from "@/components/common/Textarea";
+import type {
+  NotificationChannel,
+  WebsiteBookingPaymentMethod,
+} from "@/types/booking";
 
 export interface GuestBookingFormValues {
   guest_name: string;
   guest_phone: string;
   guest_email: string;
   expected_arrival_time: string;
-  payment_method: string;
+  payment_method: WebsiteBookingPaymentMethod;
   special_request: string;
   whatsapp_opt_in: boolean;
   email_opt_in: boolean;
   sms_opt_in: boolean;
-  preferred_notification_channel: string;
+  preferred_notification_channel: NotificationChannel;
 }
 
 interface GuestBookingFormProps {
@@ -39,6 +43,7 @@ interface GuestBookingFormProps {
   submitLabel?: string;
   loadingLabel?: string;
   className?: string;
+  allowedPaymentMethods?: WebsiteBookingPaymentMethod[];
 }
 
 type FieldErrors = Partial<
@@ -50,7 +55,7 @@ const defaultValues: GuestBookingFormValues = {
   guest_phone: "",
   guest_email: "",
   expected_arrival_time: "",
-  payment_method: "online_gateway",
+  payment_method: "pay_at_property",
   special_request: "",
   whatsapp_opt_in: true,
   email_opt_in: false,
@@ -65,6 +70,7 @@ export default function GuestBookingForm({
   submitLabel = "Confirm Cottage Booking",
   loadingLabel = "Creating Booking...",
   className = "",
+  allowedPaymentMethods = ["pay_at_property"],
 }: GuestBookingFormProps) {
   const [values, setValues] =
     useState<GuestBookingFormValues>({
@@ -74,6 +80,19 @@ export default function GuestBookingForm({
 
   const [errors, setErrors] =
     useState<FieldErrors>({});
+
+  const paymentOptions = allowedPaymentMethods.map((method) => ({
+    value: method,
+    label:
+      method === "online_gateway"
+        ? "Book online & pay securely"
+        : "Pay at property",
+  }));
+
+  const selectedPaymentMethod =
+    allowedPaymentMethods.includes(values.payment_method)
+      ? values.payment_method
+      : allowedPaymentMethods[0];
 
   function updateField<K extends keyof GuestBookingFormValues>(
     field: K,
@@ -159,6 +178,14 @@ export default function GuestBookingForm({
         "Enable SMS notifications first.";
     }
 
+    if (
+      !selectedPaymentMethod ||
+      !allowedPaymentMethods.includes(selectedPaymentMethod)
+    ) {
+      nextErrors.payment_method =
+        "Selected payment method is not available.";
+    }
+
     setErrors(nextErrors);
 
     return Object.keys(nextErrors).length === 0;
@@ -180,8 +207,16 @@ export default function GuestBookingForm({
       return;
     }
 
+    if (
+      !selectedPaymentMethod ||
+      !allowedPaymentMethods.includes(selectedPaymentMethod)
+    ) {
+      throw new Error("Selected payment method is not available.");
+    }
+
     await onSubmit({
       ...values,
+      payment_method: selectedPaymentMethod,
       guest_name: values.guest_name.trim(),
       guest_phone: values.guest_phone.trim(),
       guest_email: values.guest_email.trim(),
@@ -307,21 +342,14 @@ export default function GuestBookingForm({
           id="payment_method"
           name="payment_method"
           label="Payment method"
-          value={values.payment_method}
-          options={[
-            {
-              label: "Book online & pay securely",
-              value: "online_gateway",
-            },
-            {
-              label: "Pay at property",
-              value: "pay_at_property",
-            },
-          ]}
+          value={selectedPaymentMethod || ""}
+          options={paymentOptions}
+          disabled={paymentOptions.length === 0}
+          error={errors.payment_method}
           onChange={(event) =>
             updateField(
               "payment_method",
-              event.target.value,
+              event.target.value as WebsiteBookingPaymentMethod,
             )
           }
         />
@@ -329,14 +357,14 @@ export default function GuestBookingForm({
         <div
           className={[
             "rounded-lg border p-4 sm:col-span-2",
-            values.payment_method === "online_gateway"
+            selectedPaymentMethod === "online_gateway"
               ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
               : "border-[var(--border)] bg-[var(--surface-muted)]",
           ].join(" ")}
         >
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]">
-              {values.payment_method === "online_gateway" ? (
+              {selectedPaymentMethod === "online_gateway" ? (
                 <FaCreditCard aria-hidden="true" />
               ) : (
                 <FaMoneyBillWave aria-hidden="true" />
@@ -345,13 +373,13 @@ export default function GuestBookingForm({
 
             <div>
               <h3 className="font-bold text-[var(--foreground)]">
-                {values.payment_method === "online_gateway"
+                {selectedPaymentMethod === "online_gateway"
                   ? "Secure online payment"
                   : "Reserve now, pay later"}
               </h3>
 
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                {values.payment_method === "online_gateway"
+                {selectedPaymentMethod === "online_gateway"
                   ? "Razorpay opens after the booking is saved with UPI, card and netbanking only. Payment is marked paid after backend verification."
                   : "The booking will be saved with payment pending for direct collection by the property team."}
               </p>
@@ -501,7 +529,7 @@ export default function GuestBookingForm({
             onChange={(event) =>
               updateField(
                 "preferred_notification_channel",
-                event.target.value,
+                event.target.value as NotificationChannel,
               )
             }
           />
@@ -527,13 +555,13 @@ export default function GuestBookingForm({
         loading={loading}
         loadingText={loadingLabel}
         leftIcon={
-          values.payment_method === "online_gateway" ? (
+          selectedPaymentMethod === "online_gateway" ? (
             <FaCreditCard aria-hidden="true" />
           ) : undefined
         }
         className="mt-6"
       >
-        {values.payment_method === "online_gateway"
+        {selectedPaymentMethod === "online_gateway"
           ? "Book Online & Pay Securely"
           : submitLabel}
       </Button>

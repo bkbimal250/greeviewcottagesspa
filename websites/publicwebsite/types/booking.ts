@@ -22,6 +22,10 @@ export type PaymentMethod =
   | "bank_transfer"
   | "online_gateway";
 
+export type WebsiteBookingPaymentMethod =
+  | "pay_at_property"
+  | "online_gateway";
+
 export type NotificationChannel = "whatsapp" | "email" | "sms" | "all";
 
 export interface BookingPublic {
@@ -46,12 +50,17 @@ export interface BookingCreatePayload {
   guest_name: string;
   guest_phone: string;
   guest_email?: string;
+  guest_address?: string;
+  guest_city?: string;
+  guest_state?: string;
+  guest_country?: string;
+  guest_pincode?: string;
   check_in_date: string;
   check_out_date: string;
   adults: number;
   children: number;
   expected_arrival_time?: string | null;
-  payment_method?: PaymentMethod;
+  payment_method?: WebsiteBookingPaymentMethod;
   special_request?: string;
   whatsapp_opt_in?: boolean;
   sms_opt_in?: boolean;

@@ -4,10 +4,23 @@ from apps.common.services.image_upload import upload_image_to_media
 from apps.common.validators import validate_image_file
 from apps.cottages.models import Cottage, CottageAvailabilityHold, CottageBlock
 from apps.cottages.services import AvailabilityService
+from apps.properties.serializers import get_allowed_payment_methods
 
 
 class CottageListSerializer(serializers.ModelSerializer):
     property_name = serializers.CharField(source="property.name", read_only=True)
+    pay_at_property_allowed = serializers.BooleanField(
+        source="property.pay_at_property_allowed",
+        read_only=True,
+    )
+    online_payment_enabled = serializers.BooleanField(
+        source="property.online_payment_enabled",
+        read_only=True,
+    )
+    allowed_payment_methods = serializers.SerializerMethodField()
+
+    def get_allowed_payment_methods(self, obj: Cottage) -> list[str]:
+        return get_allowed_payment_methods(obj.property)
 
     class Meta:
         model = Cottage
@@ -34,12 +47,27 @@ class CottageListSerializer(serializers.ModelSerializer):
             "status",
             "is_featured",
             "sort_order",
+            "pay_at_property_allowed",
+            "online_payment_enabled",
+            "allowed_payment_methods",
         )
         read_only_fields = fields
 
 
 class CottageDetailSerializer(serializers.ModelSerializer):
     property_name = serializers.CharField(source="property.name", read_only=True)
+    pay_at_property_allowed = serializers.BooleanField(
+        source="property.pay_at_property_allowed",
+        read_only=True,
+    )
+    online_payment_enabled = serializers.BooleanField(
+        source="property.online_payment_enabled",
+        read_only=True,
+    )
+    allowed_payment_methods = serializers.SerializerMethodField()
+
+    def get_allowed_payment_methods(self, obj: Cottage) -> list[str]:
+        return get_allowed_payment_methods(obj.property)
 
     class Meta:
         model = Cottage

@@ -1,3 +1,5 @@
+import type { WebsiteBookingPaymentMethod } from "@/types/booking";
+
 export interface PropertyNearbyPlace {
   name: string;
   category?: string;
@@ -82,6 +84,7 @@ export interface Property {
   minimum_advance_booking_hours: number;
   pay_at_property_allowed: boolean;
   online_payment_enabled: boolean;
+  allowed_payment_methods: WebsiteBookingPaymentMethod[];
   currency: string;
   default_tax_percentage: string;
   tax_included_in_price: boolean;

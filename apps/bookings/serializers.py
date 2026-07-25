@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from apps.bookings.models import Booking, CancellationRequest
@@ -10,6 +11,7 @@ from apps.bookings.services.guest_access import BookingGuestAccessService
 from apps.bookings.services.pricing import BookingPricingService
 from apps.common.utils import normalize_phone_number
 from apps.cottages.models import Cottage
+from apps.properties.serializers import get_allowed_payment_methods
 
 
 class GuestBookingCreateSerializer(serializers.Serializer):
@@ -46,6 +48,27 @@ class GuestBookingCreateSerializer(serializers.Serializer):
         if not Cottage.objects.filter(id=value).exists():
             raise serializers.ValidationError("Selected cottage does not exist.")
         return value
+
+    def validate(self, attrs):
+        cottage = (
+            Cottage.objects.select_related("property")
+            .filter(id=attrs["cottage_id"])
+            .first()
+        )
+        if cottage is None:
+            raise serializers.ValidationError(
+                {"cottage_id": "Selected cottage does not exist."}
+            )
+
+        try:
+            BookingService.validate_public_payment_method(
+                cottage.property,
+                attrs.get("payment_method", Booking.PaymentMethod.PAY_AT_PROPERTY),
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from exc
+
+        return attrs
 
     def create(self, validated_data):
         return BookingService.create_guest_booking(
@@ -119,6 +142,7 @@ class BookingQuoteSerializer(serializers.Serializer):
                 "currency": prop.currency,
                 "pay_at_property_allowed": prop.pay_at_property_allowed,
                 "online_payment_enabled": prop.online_payment_enabled,
+                "allowed_payment_methods": get_allowed_payment_methods(prop),
                 "advance_payment_required": prop.advance_payment_required,
                 "advance_payment_percentage": prop.advance_payment_percentage,
                 "minimum_online_payment_amount": minimum_pay_now,

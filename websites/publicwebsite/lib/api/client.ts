@@ -16,6 +16,15 @@ function firstError(errors: unknown): string | undefined {
     return undefined;
   }
 
+  const paymentMethodError = (errors as Record<string, unknown>).payment_method;
+  if (Array.isArray(paymentMethodError) && paymentMethodError.length > 0) {
+    return String(paymentMethodError[0]);
+  }
+
+  if (typeof paymentMethodError === "string") {
+    return paymentMethodError;
+  }
+
   for (const value of Object.values(errors as Record<string, unknown>)) {
     if (Array.isArray(value) && value.length > 0) {
       return String(value[0]);

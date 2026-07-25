@@ -5,10 +5,23 @@ from apps.common.validators import validate_image_file
 from apps.properties.models import Property
 
 
+def get_allowed_payment_methods(property_obj: Property) -> list[str]:
+    methods = []
+    if property_obj.pay_at_property_allowed:
+        methods.append("pay_at_property")
+    if property_obj.online_payment_enabled:
+        methods.append("online_gateway")
+    return methods
+
+
 class PropertyPublicSerializer(serializers.ModelSerializer):
     full_address = serializers.CharField(read_only=True)
     public_email = serializers.CharField(read_only=True)
     public_phone = serializers.CharField(read_only=True)
+    allowed_payment_methods = serializers.SerializerMethodField()
+
+    def get_allowed_payment_methods(self, obj: Property) -> list[str]:
+        return get_allowed_payment_methods(obj)
 
     class Meta:
         model = Property
@@ -88,6 +101,7 @@ class PropertyPublicSerializer(serializers.ModelSerializer):
             "minimum_advance_booking_hours",
             "pay_at_property_allowed",
             "online_payment_enabled",
+            "allowed_payment_methods",
             "currency",
             "default_tax_percentage",
             "tax_included_in_price",
