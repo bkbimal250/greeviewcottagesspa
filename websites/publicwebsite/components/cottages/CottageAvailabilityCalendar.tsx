@@ -1,19 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import {
-  FaCalendarCheck,
   FaChevronLeft,
   FaChevronRight,
   FaCheckCircle,
   FaLock,
-  FaMinus,
-  FaPlus,
-  FaUsers,
 } from "react-icons/fa";
 
-import Button from "@/components/common/Button";
 import Price from "@/components/common/Price";
 import type {
   CottageAvailabilityDay,
@@ -71,6 +65,18 @@ function nextDay(value: string): string {
   return formatInputDate(date);
 }
 
+function getBookingHref(
+  cottageId: string,
+  day: CottageAvailabilityDay,
+): string {
+  return `/booking/${cottageId}?${new URLSearchParams({
+    check_in: day.date,
+    check_out: day.check_out || nextDay(day.date),
+    adults: "1",
+    children: "0",
+  }).toString()}`;
+}
+
 function statusClasses(status: CottageAvailabilityStatus): string {
   if (status === "available") {
     return "border-emerald-200 bg-emerald-50 text-emerald-900 hover:border-emerald-400";
@@ -105,7 +111,6 @@ export default function CottageAvailabilityCalendar({
   cottageSlug,
   days,
   currentMonth,
-  initialCheckIn,
   initialAdults = 1,
   initialChildren = 0,
   maximumAdults = 8,
@@ -117,42 +122,19 @@ export default function CottageAvailabilityCalendar({
     currentMonth || days[0]?.date.slice(0, 7) || formatInputDate(new Date()).slice(0, 7);
   const monthStart = parseDate(`${monthValue}-01`);
   const monthTitle = monthFormatter.format(monthStart);
-  const firstAvailableDate = useMemo(
-    () => days.find((day) => day.is_available)?.date,
-    [days],
-  );
-  const initialSelectedDate =
-    days.find((day) => day.is_available && day.date === initialCheckIn)?.date ||
-    firstAvailableDate ||
-    "";
   const adultLimit = Math.max(1, Math.min(maximumAdults, maximumGuests));
   const childLimit = Math.max(
     0,
     Math.min(maximumChildren, maximumGuests - 1),
   );
 
-  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
-  const [adults, setAdults] = useState(
-    clampCount(initialAdults, 1, adultLimit),
-  );
-  const [children, setChildren] = useState(
-    clampCount(
-      initialChildren,
-      0,
-      Math.min(childLimit, maximumGuests - clampCount(initialAdults, 1, adultLimit)),
-    ),
+  const adults = clampCount(initialAdults, 1, adultLimit);
+  const children = clampCount(
+    initialChildren,
+    0,
+    Math.min(childLimit, maximumGuests - adults),
   );
 
-  const selectedDay = days.find(
-    (day) => day.date === selectedDate && day.is_available,
-  );
-  const selectedCheckOut = selectedDay
-    ? selectedDay.check_out || nextDay(selectedDay.date)
-    : "";
-  const guestQuery = new URLSearchParams({
-    adults: String(adults),
-    children: String(children),
-  }).toString();
   const monthBaseHref = cottageSlug
     ? `/cottages/${cottageSlug}/availability`
     : "";
@@ -170,24 +152,6 @@ export default function CottageAvailabilityCalendar({
         children: String(children),
       }).toString()}`
     : "";
-  const bookingHref = selectedDay
-    ? `/booking/${cottageId}?${new URLSearchParams({
-        check_in: selectedDay.date,
-        check_out: selectedCheckOut,
-        adults: String(adults),
-        children: String(children),
-      }).toString()}`
-    : monthBaseHref
-      ? `${monthBaseHref}?${guestQuery}`
-      : "/cottages";
-  const maxChildrenForSelectedAdults = Math.max(
-    0,
-    Math.min(childLimit, maximumGuests - adults),
-  );
-  const maxAdultsForSelectedChildren = Math.max(
-    1,
-    Math.min(adultLimit, maximumGuests - children),
-  );
   const leadingBlanks = monthStart.getDay();
 
   if (days.length === 0) {
@@ -275,28 +239,9 @@ export default function CottageAvailabilityCalendar({
 
             {days.map((day) => {
               const date = parseDate(day.date);
-              const isSelected = selectedDate === day.date;
               const isAvailable = day.is_available;
-
-              return (
-                <button
-                  key={day.date}
-                  type="button"
-                  disabled={!isAvailable}
-                  onClick={() => setSelectedDate(day.date)}
-                  className={[
-                    "min-h-[124px] rounded-lg border p-3 text-left",
-                    "transition focus-visible:outline-none focus-visible:ring-2",
-                    "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
-                    statusClasses(day.status),
-                    isSelected
-                      ? "ring-2 ring-[var(--primary)] ring-offset-2"
-                      : "",
-                    isAvailable
-                      ? "hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
-                      : "cursor-not-allowed opacity-80",
-                  ].join(" ")}
-                >
+              const dayContent = (
+                <>
                   <span className="flex items-start justify-between gap-2">
                     <span className="text-2xl font-bold">
                       {date.getDate()}
@@ -319,130 +264,39 @@ export default function CottageAvailabilityCalendar({
                       className="mt-1 text-sm"
                     />
                   ) : null}
+                </>
+              );
+
+              return isAvailable ? (
+                <Link
+                  key={day.date}
+                  href={getBookingHref(cottageId, day)}
+                  className={[
+                    "min-h-[124px] rounded-lg border p-3 text-left",
+                    "transition focus-visible:outline-none focus-visible:ring-2",
+                    "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
+                    statusClasses(day.status),
+                    "hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]",
+                  ].join(" ")}
+                >
+                  {dayContent}
+                </Link>
+              ) : (
+                <button
+                  key={day.date}
+                  type="button"
+                  disabled
+                  className={[
+                    "min-h-[124px] cursor-not-allowed rounded-lg border p-3 text-left opacity-80",
+                    statusClasses(day.status),
+                  ].join(" ")}
+                >
+                  {dayContent}
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
-
-      <div className="mt-5 grid gap-4 rounded-lg bg-[var(--surface-muted)] p-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)_auto] xl:items-center">
-        <div>
-          <p className="text-sm font-bold text-[var(--foreground)]">
-            {selectedDay
-              ? `Selected: ${new Intl.DateTimeFormat("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                }).format(parseDate(selectedDay.date))}`
-              : "No available date selected"}
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-            Booking is for a 24-hour stay. You can change dates again before
-            payment.
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-[var(--border)] bg-white p-3">
-          <p className="mb-3 flex items-center gap-2 text-sm font-bold text-[var(--foreground)]">
-            <FaUsers
-              aria-hidden="true"
-              className="text-[var(--primary)]"
-            />
-            Guests
-          </p>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            {[
-              {
-                label: "Adults",
-                value: adults,
-                min: 1,
-                max: maxAdultsForSelectedChildren,
-                onChange: (nextValue: number) => {
-                  const nextAdults = clampCount(
-                    nextValue,
-                    1,
-                    maxAdultsForSelectedChildren,
-                  );
-                  setAdults(nextAdults);
-                  setChildren((currentChildren) =>
-                    clampCount(
-                      currentChildren,
-                      0,
-                      Math.max(
-                        0,
-                        Math.min(childLimit, maximumGuests - nextAdults),
-                      ),
-                    ),
-                  );
-                },
-              },
-              {
-                label: "Children",
-                value: children,
-                min: 0,
-                max: maxChildrenForSelectedAdults,
-                onChange: (nextValue: number) =>
-                  setChildren(
-                    clampCount(nextValue, 0, maxChildrenForSelectedAdults),
-                  ),
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between gap-3"
-              >
-                <span className="text-sm text-[var(--muted)]">
-                  {item.label}
-                </span>
-
-                <span className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label={`Decrease ${item.label.toLowerCase()}`}
-                    disabled={item.value <= item.min}
-                    onClick={() =>
-                      item.onChange(
-                        clampCount(item.value - 1, item.min, item.max),
-                      )
-                    }
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] text-[var(--primary)] transition hover:bg-[var(--primary-light)] disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    <FaMinus aria-hidden="true" />
-                  </button>
-
-                  <span className="w-7 text-center font-bold">
-                    {item.value}
-                  </span>
-
-                  <button
-                    type="button"
-                    aria-label={`Increase ${item.label.toLowerCase()}`}
-                    disabled={item.value >= item.max}
-                    onClick={() =>
-                      item.onChange(
-                        clampCount(item.value + 1, item.min, item.max),
-                      )
-                    }
-                    className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] text-[var(--primary)] transition hover:bg-[var(--primary-light)] disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    <FaPlus aria-hidden="true" />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Button
-          href={bookingHref}
-          disabled={!selectedDay}
-          leftIcon={<FaCalendarCheck aria-hidden="true" />}
-        >
-          Book Selected Date
-        </Button>
       </div>
     </section>
   );

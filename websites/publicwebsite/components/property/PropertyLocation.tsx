@@ -161,7 +161,7 @@ export default function PropertyLocation({
                   className="text-base text-[#b89654]"
                 />
 
-                Property Location
+                Green View Cottages
               </div>
 
               <h2 className="mt-5 max-w-2xl font-[var(--font-playfair)] text-4xl font-bold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">

@@ -191,7 +191,7 @@ export default async function ContactPage() {
                   <FaMapMarkerAlt />
                 </div>
 
-                <h2 className="mt-5 text-lg font-bold">Property location</h2>
+                <h2 className="mt-5 text-lg font-bold">Green View Cottages</h2>
 
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   {address}

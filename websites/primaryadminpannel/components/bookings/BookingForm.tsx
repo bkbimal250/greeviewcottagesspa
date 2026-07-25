@@ -339,6 +339,21 @@ export default function BookingForm({
             Select the property, cottage and stay
             dates.
           </p>
+
+          <div className="mt-4 grid gap-2 text-xs font-semibold text-slate-700 sm:grid-cols-3">
+            {[
+              "1. Select stay",
+              "2. Guest details",
+              "3. Review payment",
+            ].map((step) => (
+              <div
+                key={step}
+                className="rounded-full border border-blue-100 bg-blue-50 px-3 py-2 text-center text-blue-700"
+              >
+                {step}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">
@@ -759,8 +774,39 @@ export default function BookingForm({
 
           <div className="h-fit rounded-xl bg-slate-50 p-4">
             <h3 className="text-sm font-semibold text-slate-900">
-              Estimated Summary
+              Cottage and Payment Summary
             </h3>
+
+            <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3 text-sm">
+              <p className="font-semibold text-slate-900">
+                {selectedCottage?.name ||
+                  "No cottage selected"}
+              </p>
+
+              <div className="mt-3 space-y-2 text-slate-600">
+                <div className="flex justify-between gap-4">
+                  <span>Stay dates</span>
+                  <span className="text-right font-medium text-slate-900">
+                    {form.checkInDate && form.checkOutDate
+                      ? `${form.checkInDate} to ${form.checkOutDate}`
+                      : "Select dates"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between gap-4">
+                  <span>Guests</span>
+                  <span className="font-medium text-slate-900">
+                    {form.adults} adults
+                    {form.children
+                      ? `, ${form.children} children`
+                      : ""}
+                    {form.infants
+                      ? `, ${form.infants} infants`
+                      : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
 
             <div className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between gap-4 text-slate-600">

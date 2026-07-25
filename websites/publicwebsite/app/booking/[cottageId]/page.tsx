@@ -129,7 +129,6 @@ interface BookingFormValues {
 }
 
 type FieldErrors = Partial<Record<keyof BookingFormValues, string>>;
-type BookingFormStep = "guest" | "payment";
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -145,7 +144,7 @@ const initialFormValues: BookingFormValues = {
   guest_country: "India",
   guest_pincode: "",
   expected_arrival_time: "",
-  payment_method: "online_gateway",
+  payment_method: "pay_at_property",
   special_request: "",
   whatsapp_opt_in: true,
   email_opt_in: false,
@@ -440,9 +439,6 @@ export default function BookingPage() {
   const [pageError, setPageError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingStep, setBookingStep] =
-    useState<BookingFormStep>("guest");
-
   const searchQuery = useMemo(() => {
     if (!checkIn || !checkOut) {
       return "";
@@ -658,7 +654,6 @@ export default function BookingPage() {
   function validateForm(): boolean {
     const isGuestStepValid = validateGuestStep();
     if (!isGuestStepValid) {
-      setBookingStep("guest");
       return false;
     }
 
@@ -701,17 +696,6 @@ export default function BookingPage() {
         toast.error(pageError);
       }
 
-      return;
-    }
-
-    if (bookingStep === "guest") {
-      if (!validateGuestStep()) {
-        toast.error("Please complete guest details.");
-        return;
-      }
-
-      setBookingStep("payment");
-      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
@@ -782,93 +766,106 @@ export default function BookingPage() {
         JSON.stringify(bookingData),
       );
 
+      const confirmationHref = `/booking/confirmation/${encodeURIComponent(
+        bookingId,
+      )}?phone=${encodeURIComponent(formValues.guest_phone.trim())}`;
+
       if (formValues.payment_method === "online_gateway") {
-        toast.info("Booking saved. Opening secure payment...");
+        try {
+          toast.info("Booking saved. Opening secure payment...");
 
-        const order = await postEnvelope<RazorpayOrderData>(
-          "/api/payments/razorpay/orders",
-          {
-            booking_id: bookingId,
-            guest_phone: formValues.guest_phone.trim(),
-            amount: bookingData.balance_amount || grandTotal,
-          },
-          45000,
-        );
-
-        if (!order.razorpay_key_id || !order.razorpay_order_id) {
-          throw new Error(
-            "Razorpay order was created without payment details. Please check Razorpay credentials.",
+          const order = await postEnvelope<RazorpayOrderData>(
+            "/api/payments/razorpay/orders",
+            {
+              booking_id: bookingId,
+              guest_phone: formValues.guest_phone.trim(),
+              amount: bookingData.balance_amount || grandTotal,
+            },
+            45000,
           );
-        }
 
-        await loadRazorpayScript();
+          if (!order.razorpay_key_id || !order.razorpay_order_id) {
+            throw new Error(
+              "Razorpay order was created without payment details.",
+            );
+          }
 
-        const payment = await openRazorpayCheckout({
-          key: order.razorpay_key_id,
-          amount: paiseFromRupees(order.amount),
-          currency: order.currency || "INR",
-          name: "Green View Cottages",
-          description: `${cottage.name} booking ${bookingId}`,
-          order_id: order.razorpay_order_id,
-          prefill: {
-            name: formValues.guest_name.trim(),
-            email: formValues.guest_email.trim() || undefined,
-            contact: formValues.guest_phone.trim(),
-          },
-          notes: {
-            booking_id: bookingId,
-            cottage: cottage.name,
-          },
-          theme: {
-            color: "#2f7d4f",
-          },
-          config: {
-            display: {
-              blocks: {
-                allowed_methods: {
-                  name: "Payment Options",
-                  instruments: [
-                    { method: "upi" },
-                    { method: "card" },
-                    { method: "netbanking" },
-                  ],
+          await loadRazorpayScript();
+
+          const payment = await openRazorpayCheckout({
+            key: order.razorpay_key_id,
+            amount: paiseFromRupees(order.amount),
+            currency: order.currency || "INR",
+            name: "Green View Cottages",
+            description: `${cottage.name} booking ${bookingId}`,
+            order_id: order.razorpay_order_id,
+            prefill: {
+              name: formValues.guest_name.trim(),
+              email: formValues.guest_email.trim() || undefined,
+              contact: formValues.guest_phone.trim(),
+            },
+            notes: {
+              booking_id: bookingId,
+              cottage: cottage.name,
+            },
+            theme: {
+              color: "#2f7d4f",
+            },
+            config: {
+              display: {
+                blocks: {
+                  allowed_methods: {
+                    name: "Payment Options",
+                    instruments: [
+                      { method: "upi" },
+                      { method: "card" },
+                      { method: "netbanking" },
+                    ],
+                  },
+                },
+                sequence: ["block.allowed_methods"],
+                preferences: {
+                  show_default_blocks: false,
                 },
               },
-              sequence: ["block.allowed_methods"],
-              preferences: {
-                show_default_blocks: false,
-              },
             },
-          },
-          handler: () => undefined,
-          modal: {
-            confirm_close: true,
-            ondismiss: () => undefined,
-          },
-        });
+            handler: () => undefined,
+            modal: {
+              confirm_close: true,
+              ondismiss: () => undefined,
+            },
+          });
 
-        await postEnvelope(
-          "/api/payments/razorpay/confirm",
-          {
-            booking_id: bookingId,
-            guest_phone: formValues.guest_phone.trim(),
-            razorpay_order_id: payment.razorpay_order_id,
-            razorpay_payment_id: payment.razorpay_payment_id,
-            razorpay_signature: payment.razorpay_signature,
-          },
-          45000,
-        );
+          await postEnvelope(
+            "/api/payments/razorpay/confirm",
+            {
+              booking_id: bookingId,
+              guest_phone: formValues.guest_phone.trim(),
+              razorpay_order_id: payment.razorpay_order_id,
+              razorpay_payment_id: payment.razorpay_payment_id,
+              razorpay_signature: payment.razorpay_signature,
+            },
+            45000,
+          );
 
-        toast.success("Payment verified. Your booking is confirmed.");
+          toast.success("Payment verified. Your booking is confirmed.");
+        } catch (paymentError) {
+          const paymentMessage =
+            paymentError instanceof Error
+              ? paymentError.message
+              : "Online payment could not be started.";
+
+          toast.warn(
+            `${paymentMessage} Your booking is saved with payment pending.`,
+          );
+          router.push(confirmationHref);
+          return;
+        }
       } else {
         toast.success("Your cottage booking has been created.");
       }
 
-      router.push(
-        `/booking/confirmation/${encodeURIComponent(
-          bookingId,
-        )}?phone=${encodeURIComponent(formValues.guest_phone.trim())}`,
-      );
+      router.push(confirmationHref);
     } catch (error) {
       const message =
         error instanceof Error
@@ -1052,32 +1049,24 @@ export default function BookingPage() {
             >
               <div className="border-b border-[var(--border)] pb-5">
                 <h2 className="text-2xl font-bold">
-                  {bookingStep === "guest"
-                    ? "Guest information"
-                    : "Confirm and pay"}
+                  Complete your booking
                 </h2>
 
                 <p className="mt-2 text-sm text-[var(--muted)]">
-                  {bookingStep === "guest"
-                    ? "First add guest contact and address details."
-                    : "Review notification preferences and complete the final payment step."}
+                  Enter guest details and choose how you want to pay.
                 </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                <div className="mt-5 grid gap-3 text-sm sm:grid-cols-3">
                   {[
-                    { key: "guest", label: "1. Guest details" },
-                    { key: "payment", label: "2. Final payment" },
+                    "1. Date selected",
+                    "2. Guest details",
+                    "3. Payment",
                   ].map((step) => (
                     <div
-                      key={step.key}
-                      className={[
-                        "rounded-full border px-3 py-2 text-center font-semibold",
-                        bookingStep === step.key
-                          ? "border-[var(--primary)] bg-[var(--primary-light)] text-[var(--primary)]"
-                          : "border-[var(--border)] bg-white text-[var(--muted)]",
-                      ].join(" ")}
+                      key={step}
+                      className="rounded-full border border-[var(--primary)]/20 bg-[var(--primary-light)] px-3 py-2 text-center font-semibold text-[var(--primary)]"
                     >
-                      {step.label}
+                      {step}
                     </div>
                   ))}
                 </div>
@@ -1340,7 +1329,6 @@ export default function BookingPage() {
                 <Select
                   id="payment_method"
                   label="Payment method"
-                  containerClassName={bookingStep === "payment" ? "" : "hidden"}
                   value={formValues.payment_method}
                   options={[
                     {
@@ -1362,7 +1350,6 @@ export default function BookingPage() {
 
                 <div
                   className={[
-                    bookingStep === "payment" ? "" : "hidden",
                     "rounded-lg border p-4 sm:col-span-2",
                     formValues.payment_method === "online_gateway"
                       ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
@@ -1390,7 +1377,7 @@ export default function BookingPage() {
 
                       <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
                         {formValues.payment_method === "online_gateway"
-                          ? "Your booking is saved first, then Razorpay opens with UPI, QR, card and other enabled payment options. Payment is marked paid only after backend verification."
+                          ? "Your booking is saved first, then Razorpay opens with UPI, card and netbanking only. Payment is marked paid after backend verification."
                           : "Your booking will be saved with payment pending. The property team can collect payment directly."}
                       </p>
                     </div>
@@ -1415,10 +1402,7 @@ export default function BookingPage() {
               </div>
 
               <div
-                className={[
-                  "mt-8 border-t border-[var(--border)] pt-6",
-                  bookingStep === "payment" ? "" : "hidden",
-                ].join(" ")}
+                className="mt-8 border-t border-[var(--border)] pt-6"
               >
                 <h2 className="text-lg font-bold">
                   Booking notifications
@@ -1563,9 +1547,7 @@ export default function BookingPage() {
                 fullWidth
                 loading={isSubmitting}
                 loadingText={
-                  bookingStep === "guest"
-                    ? "Checking Details..."
-                    : formValues.payment_method === "online_gateway"
+                  formValues.payment_method === "online_gateway"
                     ? "Starting Payment..."
                     : "Creating Booking..."
                 }
@@ -1579,25 +1561,10 @@ export default function BookingPage() {
                 className="mt-6"
                 disabled={Boolean(pageError)}
               >
-                {bookingStep === "guest"
-                  ? "Continue to Final Step"
-                  : formValues.payment_method === "online_gateway"
-                    ? "Create Pending Booking & Pay"
-                    : "Create Pending Booking"}
+                {formValues.payment_method === "online_gateway"
+                  ? "Create Booking & Pay"
+                  : "Create Booking"}
               </Button>
-
-              {bookingStep === "payment" ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  fullWidth
-                  className="mt-3"
-                  disabled={isSubmitting}
-                  onClick={() => setBookingStep("guest")}
-                >
-                  Back to Guest Details
-                </Button>
-              ) : null}
 
               <p className="mt-4 text-center text-xs leading-5 text-[var(--muted)]">
                 By confirming, you agree to the property booking and

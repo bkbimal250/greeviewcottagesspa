@@ -310,7 +310,7 @@ export default function GuestBookingForm({
           value={values.payment_method}
           options={[
             {
-              label: "Book online with Razorpay",
+              label: "Book online & pay securely",
               value: "online_gateway",
             },
             {
@@ -352,7 +352,7 @@ export default function GuestBookingForm({
 
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
                 {values.payment_method === "online_gateway"
-                  ? "Razorpay opens after the booking is saved with UPI, QR, card and other enabled payment options. Payment is marked paid only after backend verification."
+                  ? "Razorpay opens after the booking is saved with UPI, card and netbanking only. Payment is marked paid after backend verification."
                   : "The booking will be saved with payment pending for direct collection by the property team."}
               </p>
             </div>
