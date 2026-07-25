@@ -162,7 +162,7 @@ const initialFormValues: BookingFormValues = {
   guest_country: "India",
   guest_pincode: "",
   expected_arrival_time: "",
-  payment_method: "pay_at_property",
+  payment_method: "online_gateway",
   special_request: "",
   whatsapp_opt_in: true,
   email_opt_in: false,
@@ -178,10 +178,16 @@ function getAllowedPaymentMethods(
   }
 
   if (Array.isArray(cottage.allowed_payment_methods)) {
-    return cottage.allowed_payment_methods.filter(
+    const methods = cottage.allowed_payment_methods.filter(
       (method): method is WebsiteBookingPaymentMethod =>
         method === "pay_at_property" || method === "online_gateway",
     );
+    return methods.includes("online_gateway")
+      ? [
+          "online_gateway",
+          ...methods.filter((method) => method !== "online_gateway"),
+        ]
+      : methods;
   }
 
   const methods: WebsiteBookingPaymentMethod[] = [];
@@ -432,17 +438,26 @@ function openRazorpayCheckout(
       return;
     }
 
+    let paymentCompleted = false;
     const checkout = new window.Razorpay({
       ...options,
-      handler: resolve,
+      handler: (response) => {
+        paymentCompleted = true;
+        checkout.close?.();
+        resolve(response);
+      },
       modal: {
         confirm_close: true,
-        ondismiss: () =>
+        ondismiss: () => {
+          if (paymentCompleted) {
+            return;
+          }
           reject(
             new Error(
               "Payment was cancelled. Your booking is saved, but payment is pending.",
             ),
-          ),
+          );
+        },
       },
     });
 
@@ -913,11 +928,6 @@ export default function BookingPage() {
                 },
               },
             },
-            handler: () => undefined,
-            modal: {
-              confirm_close: true,
-              ondismiss: () => undefined,
-            },
           });
 
           await postEnvelope(
@@ -1257,6 +1267,58 @@ export default function BookingPage() {
               </div>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <Select
+                  id="payment_method"
+                  label="Payment method"
+                  value={selectedPaymentMethod || ""}
+                  options={paymentOptions}
+                  disabled={paymentOptions.length === 0}
+                  error={fieldErrors.payment_method}
+                  containerClassName="sm:col-span-2"
+                  onChange={(event) =>
+                    updateField(
+                      "payment_method",
+                      event.target.value as WebsiteBookingPaymentMethod,
+                    )
+                  }
+                />
+
+                <div
+                  className={[
+                    "rounded-lg border p-4 sm:col-span-2",
+                    selectedPaymentMethod === "online_gateway"
+                      ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
+                      : "border-[var(--border)] bg-[var(--surface-muted)]",
+                  ].join(" ")}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      aria-hidden="true"
+                      className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]"
+                    >
+                      {selectedPaymentMethod === "online_gateway" ? (
+                        <FaCreditCard />
+                      ) : (
+                        <FaMoneyBillWave />
+                      )}
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-[var(--foreground)]">
+                        {selectedPaymentMethod === "online_gateway"
+                          ? "Secure online payment"
+                          : "Reserve now, pay later"}
+                      </h3>
+
+                      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                        {selectedPaymentMethod === "online_gateway"
+                          ? "Your booking is saved first, then Razorpay opens with UPI, card and netbanking only. Payment is marked paid after backend verification."
+                          : "Your booking will be saved with payment pending. The property team can collect payment directly."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <Input
                   id="guest_name"
                   label="Guest name"
@@ -1409,57 +1471,6 @@ export default function BookingPage() {
                     )
                   }
                 />
-
-                <Select
-                  id="payment_method"
-                  label="Payment method"
-                  value={selectedPaymentMethod || ""}
-                  options={paymentOptions}
-                  disabled={paymentOptions.length === 0}
-                  error={fieldErrors.payment_method}
-                  onChange={(event) =>
-                    updateField(
-                      "payment_method",
-                      event.target.value as WebsiteBookingPaymentMethod,
-                    )
-                  }
-                />
-
-                <div
-                  className={[
-                    "rounded-lg border p-4 sm:col-span-2",
-                    selectedPaymentMethod === "online_gateway"
-                      ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
-                      : "border-[var(--border)] bg-[var(--surface-muted)]",
-                  ].join(" ")}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      aria-hidden="true"
-                      className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]"
-                    >
-                      {selectedPaymentMethod === "online_gateway" ? (
-                        <FaCreditCard />
-                      ) : (
-                        <FaMoneyBillWave />
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="font-bold text-[var(--foreground)]">
-                        {selectedPaymentMethod === "online_gateway"
-                          ? "Secure online payment"
-                          : "Reserve now, pay later"}
-                      </h3>
-
-                      <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                        {selectedPaymentMethod === "online_gateway"
-                          ? "Your booking is saved first, then Razorpay opens with UPI, card and netbanking only. Payment is marked paid after backend verification."
-                          : "Your booking will be saved with payment pending. The property team can collect payment directly."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
                 <Textarea
                   id="special_request"

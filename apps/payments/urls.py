@@ -6,6 +6,7 @@ from apps.payments.views import (
     AdminPaymentListCreateView,
     RazorpayConfirmView,
     RazorpayOrderCreateView,
+    RazorpayWebhookView,
     UPIQRCodeCreateView,
 )
 
@@ -30,6 +31,11 @@ urlpatterns = [
         "payments/razorpay/confirm/",
         RazorpayConfirmView.as_view(),
         name="razorpay-confirm",
+    ),
+    path(
+        "payments/razorpay/webhook/",
+        RazorpayWebhookView.as_view(),
+        name="razorpay-webhook",
     ),
     path("payments/upi/qr/", UPIQRCodeCreateView.as_view(), name="upi-qr-create"),
 ]

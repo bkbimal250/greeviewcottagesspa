@@ -49,7 +49,7 @@ class PropertySetupTests(SimpleTestCase):
 
         self.assertEqual(
             data["allowed_payment_methods"],
-            ["pay_at_property", "online_gateway"],
+            ["online_gateway", "pay_at_property"],
         )
 
     def test_admin_serializers_support_update_surfaces(self):

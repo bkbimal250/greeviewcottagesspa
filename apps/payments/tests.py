@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import json
 from datetime import timedelta
 from decimal import Decimal
 
@@ -162,3 +163,58 @@ class PaymentServiceTests(TestCase):
         self.assertEqual(self.booking.payment_status, Booking.PaymentStatus.PAID)
         self.assertEqual(self.booking.booking_status, Booking.Status.CONFIRMED)
         self.assertIsNotNone(self.booking.confirmed_at)
+
+    @override_settings(RAZORPAY_WEBHOOK_SECRET="webhook-secret")
+    def test_razorpay_webhook_records_captured_payment(self):
+        self.property.online_payment_enabled = True
+        self.property.save(update_fields=["online_payment_enabled"])
+        order = PaymentOrder.objects.create(
+            booking=self.booking,
+            provider=PaymentOrder.Provider.RAZORPAY,
+            amount=Decimal("2000.00"),
+            receipt="GVC-RZP",
+            razorpay_order_id="order_webhook_123",
+        )
+        payload = {
+            "event": "payment.captured",
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": "pay_webhook_123",
+                        "order_id": order.razorpay_order_id,
+                    }
+                }
+            },
+        }
+        body = json.dumps(payload).encode("utf-8")
+        signature = hmac.new(
+            b"webhook-secret",
+            body,
+            hashlib.sha256,
+        ).hexdigest()
+
+        response = self.client.post(
+            reverse("payments:razorpay-webhook"),
+            data=body,
+            content_type="application/json",
+            HTTP_X_RAZORPAY_SIGNATURE=signature,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.booking.refresh_from_db()
+        order.refresh_from_db()
+        self.assertEqual(order.status, PaymentOrder.Status.PAID)
+        self.assertEqual(self.booking.amount_paid, Decimal("2000.00"))
+        self.assertEqual(self.booking.payment_status, Booking.PaymentStatus.PAID)
+        self.assertEqual(self.booking.booking_status, Booking.Status.CONFIRMED)
+
+    @override_settings(RAZORPAY_WEBHOOK_SECRET="webhook-secret")
+    def test_razorpay_webhook_rejects_invalid_signature(self):
+        response = self.client.post(
+            reverse("payments:razorpay-webhook"),
+            data=b'{"event":"payment.captured"}',
+            content_type="application/json",
+            HTTP_X_RAZORPAY_SIGNATURE="invalid",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

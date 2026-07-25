@@ -100,8 +100,8 @@ export interface RazorpayCheckoutOptions {
       };
     };
   };
-  handler: (response: RazorpayCheckoutResponse) => void | Promise<void>;
-  modal: {
+  handler?: (response: RazorpayCheckoutResponse) => void | Promise<void>;
+  modal?: {
     confirm_close?: boolean;
     ondismiss?: () => void;
   };
@@ -109,6 +109,7 @@ export interface RazorpayCheckoutOptions {
 
 export interface RazorpayInstance {
   open: () => void;
+  close?: () => void;
   on: (
     event: "payment.failed",
     handler: (response: RazorpayFailureResponse) => void,
@@ -180,6 +181,9 @@ export function openRazorpayCheckout({
     return;
   }
 
+  let paymentCompleted = false;
+  const razorpayRef: { current?: RazorpayInstance } = {};
+
   const options: RazorpayCheckoutOptions = {
     key: order.razorpay_key_id,
     amount: amountInPaise,
@@ -205,7 +209,11 @@ export function openRazorpayCheckout({
 
     modal: {
       confirm_close: true,
-      ondismiss: onClose,
+      ondismiss: () => {
+        if (!paymentCompleted) {
+          onClose?.();
+        }
+      },
     },
 
     config: {
@@ -236,6 +244,9 @@ export function openRazorpayCheckout({
     handler: async (
       response: RazorpayCheckoutResponse,
     ) => {
+      paymentCompleted = true;
+      razorpayRef.current?.close?.();
+
       try {
         const confirmPayload: RazorpayConfirmPayload = {
           booking_id: order.booking_id,
@@ -262,9 +273,8 @@ export function openRazorpayCheckout({
     },
   };
 
-  const razorpay = new window.Razorpay(
-    options,
-  );
+  const razorpay = new window.Razorpay(options);
+  razorpayRef.current = razorpay;
 
   razorpay.on(
     "payment.failed",

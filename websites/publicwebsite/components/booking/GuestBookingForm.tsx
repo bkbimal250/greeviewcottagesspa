@@ -55,7 +55,7 @@ const defaultValues: GuestBookingFormValues = {
   guest_phone: "",
   guest_email: "",
   expected_arrival_time: "",
-  payment_method: "pay_at_property",
+  payment_method: "online_gateway",
   special_request: "",
   whatsapp_opt_in: true,
   email_opt_in: false,
@@ -81,7 +81,16 @@ export default function GuestBookingForm({
   const [errors, setErrors] =
     useState<FieldErrors>({});
 
-  const paymentOptions = allowedPaymentMethods.map((method) => ({
+  const orderedPaymentMethods = allowedPaymentMethods.includes("online_gateway")
+    ? [
+        "online_gateway" as const,
+        ...allowedPaymentMethods.filter(
+          (method) => method !== "online_gateway",
+        ),
+      ]
+    : allowedPaymentMethods;
+
+  const paymentOptions = orderedPaymentMethods.map((method) => ({
     value: method,
     label:
       method === "online_gateway"
@@ -90,9 +99,9 @@ export default function GuestBookingForm({
   }));
 
   const selectedPaymentMethod =
-    allowedPaymentMethods.includes(values.payment_method)
+    orderedPaymentMethods.includes(values.payment_method)
       ? values.payment_method
-      : allowedPaymentMethods[0];
+      : orderedPaymentMethods[0];
 
   function updateField<K extends keyof GuestBookingFormValues>(
     field: K,
@@ -249,6 +258,56 @@ export default function GuestBookingForm({
       </div>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
+        <Select
+          id="payment_method"
+          name="payment_method"
+          label="Payment method"
+          value={selectedPaymentMethod || ""}
+          options={paymentOptions}
+          disabled={paymentOptions.length === 0}
+          error={errors.payment_method}
+          containerClassName="sm:col-span-2"
+          onChange={(event) =>
+            updateField(
+              "payment_method",
+              event.target.value as WebsiteBookingPaymentMethod,
+            )
+          }
+        />
+
+        <div
+          className={[
+            "rounded-lg border p-4 sm:col-span-2",
+            selectedPaymentMethod === "online_gateway"
+              ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
+              : "border-[var(--border)] bg-[var(--surface-muted)]",
+          ].join(" ")}
+        >
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]">
+              {selectedPaymentMethod === "online_gateway" ? (
+                <FaCreditCard aria-hidden="true" />
+              ) : (
+                <FaMoneyBillWave aria-hidden="true" />
+              )}
+            </div>
+
+            <div>
+              <h3 className="font-bold text-[var(--foreground)]">
+                {selectedPaymentMethod === "online_gateway"
+                  ? "Secure online payment"
+                  : "Reserve now, pay later"}
+              </h3>
+
+              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+                {selectedPaymentMethod === "online_gateway"
+                  ? "Razorpay opens after the booking is saved with UPI, card and netbanking only. Payment is marked paid after backend verification."
+                  : "The booking will be saved with payment pending for direct collection by the property team."}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <Input
           id="guest_name"
           name="guest_name"
@@ -337,55 +396,6 @@ export default function GuestBookingForm({
             )
           }
         />
-
-        <Select
-          id="payment_method"
-          name="payment_method"
-          label="Payment method"
-          value={selectedPaymentMethod || ""}
-          options={paymentOptions}
-          disabled={paymentOptions.length === 0}
-          error={errors.payment_method}
-          onChange={(event) =>
-            updateField(
-              "payment_method",
-              event.target.value as WebsiteBookingPaymentMethod,
-            )
-          }
-        />
-
-        <div
-          className={[
-            "rounded-lg border p-4 sm:col-span-2",
-            selectedPaymentMethod === "online_gateway"
-              ? "border-[var(--primary)]/30 bg-[var(--primary-light)]"
-              : "border-[var(--border)] bg-[var(--surface-muted)]",
-          ].join(" ")}
-        >
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--primary)]">
-              {selectedPaymentMethod === "online_gateway" ? (
-                <FaCreditCard aria-hidden="true" />
-              ) : (
-                <FaMoneyBillWave aria-hidden="true" />
-              )}
-            </div>
-
-            <div>
-              <h3 className="font-bold text-[var(--foreground)]">
-                {selectedPaymentMethod === "online_gateway"
-                  ? "Secure online payment"
-                  : "Reserve now, pay later"}
-              </h3>
-
-              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                {selectedPaymentMethod === "online_gateway"
-                  ? "Razorpay opens after the booking is saved with UPI, card and netbanking only. Payment is marked paid after backend verification."
-                  : "The booking will be saved with payment pending for direct collection by the property team."}
-              </p>
-            </div>
-          </div>
-        </div>
 
         <Textarea
           id="special_request"

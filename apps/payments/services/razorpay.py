@@ -118,6 +118,80 @@ class RazorpayService:
             return payment
 
     @classmethod
+    def handle_payment_captured_webhook(cls, payload: dict) -> Payment | None:
+        payment_entity = (
+            payload.get("payload", {})
+            .get("payment", {})
+            .get("entity", {})
+        )
+        razorpay_order_id = payment_entity.get("order_id")
+        razorpay_payment_id = payment_entity.get("id")
+
+        if not razorpay_order_id or not razorpay_payment_id:
+            return None
+
+        with transaction.atomic():
+            order = (
+                PaymentOrder.objects.select_for_update()
+                .select_related("booking")
+                .filter(
+                    razorpay_order_id=razorpay_order_id,
+                    provider=PaymentOrder.Provider.RAZORPAY,
+                )
+                .first()
+            )
+            if order is None:
+                logger.warning(
+                    "Razorpay webhook received for unknown order %s",
+                    razorpay_order_id,
+                )
+                return None
+
+            existing_payment = Payment.objects.filter(
+                gateway_payment_id=razorpay_payment_id,
+                provider=Payment.Provider.RAZORPAY,
+            ).first()
+            if existing_payment:
+                return existing_payment
+
+            if order.status == PaymentOrder.Status.PAID:
+                return Payment.objects.filter(
+                    gateway_order_id=razorpay_order_id,
+                    provider=Payment.Provider.RAZORPAY,
+                ).first()
+
+            payment = PaymentService.record_payment(
+                booking=order.booking,
+                amount=order.amount,
+                method=Booking.PaymentMethod.ONLINE_GATEWAY,
+                provider=Payment.Provider.RAZORPAY,
+                transaction_id=razorpay_payment_id,
+                gateway_order_id=razorpay_order_id,
+                gateway_payment_id=razorpay_payment_id,
+                gateway_signature="",
+                notes="Verified Razorpay payment webhook.",
+            )
+            order.status = PaymentOrder.Status.PAID
+            order.paid_at = timezone.now()
+            order.provider_payload = payload
+            order.save(
+                update_fields=[
+                    "status",
+                    "paid_at",
+                    "provider_payload",
+                    "updated_at",
+                ]
+            )
+            return payment
+
+    @staticmethod
+    def verify_webhook_signature(*, body: bytes, signature: str) -> bool:
+        webhook_secret = getattr(settings, "RAZORPAY_WEBHOOK_SECRET", "")
+        if not webhook_secret:
+            raise ImproperlyConfigured("Razorpay webhook secret is not configured.")
+        return RazorpayService.verify_signature(body, signature, webhook_secret)
+
+    @classmethod
     def post(cls, path: str, payload: dict) -> dict:
         data = json.dumps(payload).encode("utf-8")
         http_request = request.Request(

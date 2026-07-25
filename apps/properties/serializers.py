@@ -7,10 +7,10 @@ from apps.properties.models import Property
 
 def get_allowed_payment_methods(property_obj: Property) -> list[str]:
     methods = []
-    if property_obj.pay_at_property_allowed:
-        methods.append("pay_at_property")
     if property_obj.online_payment_enabled:
         methods.append("online_gateway")
+    if property_obj.pay_at_property_allowed:
+        methods.append("pay_at_property")
     return methods
 
 

@@ -1,10 +1,13 @@
+import json
+
+from django.core.exceptions import ImproperlyConfigured
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status
 
 from apps.accounts.permissions import IsAdminOrStaff
 from apps.bookings.models import Booking
-from apps.common.responses import success_response
+from apps.common.responses import error_response, success_response
 from apps.payments.models import Payment
 from apps.payments.serializers import (
     BookingPaymentCreateSerializer,
@@ -15,6 +18,7 @@ from apps.payments.serializers import (
     RazorpayOrderCreateSerializer,
     UPIQRCodeCreateSerializer,
 )
+from apps.payments.services.razorpay import RazorpayService
 
 
 @extend_schema_view(
@@ -147,6 +151,55 @@ class RazorpayConfirmView(generics.GenericAPIView):
         return success_response(
             data=PaymentSerializer(payment).data,
             message="Razorpay payment verified successfully.",
+        )
+
+
+@extend_schema(tags=["Payments"], operation_id="payment_razorpay_webhook")
+class RazorpayWebhookView(generics.GenericAPIView):
+    authentication_classes = []
+    permission_classes = []
+    throttle_scope = "payment_confirm"
+
+    def post(self, request):
+        signature = request.META.get("HTTP_X_RAZORPAY_SIGNATURE", "")
+        if not signature:
+            return error_response(
+                message="Missing Razorpay webhook signature.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        body = request.body
+        try:
+            if not RazorpayService.verify_webhook_signature(
+                body=body,
+                signature=signature,
+            ):
+                return error_response(
+                    message="Invalid Razorpay webhook signature.",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+        except ImproperlyConfigured:
+            return error_response(
+                message="Razorpay webhook is not configured.",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        try:
+            payload = json.loads(body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return error_response(
+                message="Invalid Razorpay webhook payload.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        event = payload.get("event")
+        payment = None
+        if event == "payment.captured":
+            payment = RazorpayService.handle_payment_captured_webhook(payload)
+
+        return success_response(
+            data=PaymentSerializer(payment).data if payment else {},
+            message="Razorpay webhook processed successfully.",
         )
 
 
