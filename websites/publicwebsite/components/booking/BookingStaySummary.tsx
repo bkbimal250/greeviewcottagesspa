@@ -7,6 +7,7 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaHome,
+  FaUtensils,
   FaUsers,
 } from "react-icons/fa";
 
@@ -162,7 +163,15 @@ export default function BookingStaySummary({
                   </dd>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                  This is the amount used for online payment.
+                  This amount is only for the cottage stay.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                <FaUtensils aria-hidden="true" className="mt-1 shrink-0" />
+                <p className="text-xs font-semibold leading-5">
+                  Food is not included in this cottage price. Meals must be purchased
+                  separately at the property.
                 </p>
               </div>
             </dl>

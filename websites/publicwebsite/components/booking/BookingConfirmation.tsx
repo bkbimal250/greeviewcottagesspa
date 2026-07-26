@@ -370,7 +370,7 @@ export default function BookingConfirmation({
             </p>
 
             <p className="mt-1 text-xs text-[var(--muted)]">
-              Final backend-calculated amount
+              Cottage stay amount only
             </p>
           </div>
 
@@ -378,6 +378,11 @@ export default function BookingConfirmation({
             amount={booking.grand_total || "0"}
             className="text-3xl text-[var(--primary)]"
           />
+        </div>
+
+        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900">
+          Food is not included in this cottage price. Meals must be purchased
+          separately at the property.
         </div>
       </div>
 
