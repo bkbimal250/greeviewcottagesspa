@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, status
 
-from apps.accounts.permissions import IsAdminOrStaff
+from apps.accounts.permissions import IsAdminOrStaff, IsSuperAdmin
 from apps.bookings.models import Booking
 from apps.common.responses import error_response, success_response
 from apps.payments.models import Payment
@@ -19,6 +19,7 @@ from apps.payments.serializers import (
     UPIQRCodeCreateSerializer,
 )
 from apps.payments.services.razorpay import RazorpayService
+from apps.payments.services.payments import PaymentService
 
 
 @extend_schema_view(
@@ -67,13 +68,21 @@ class AdminPaymentListCreateView(generics.GenericAPIView):
 @extend_schema_view(
     get=extend_schema(tags=["Admin Payments"], operation_id="admin_payment_retrieve"),
 )
-class AdminPaymentDetailView(generics.RetrieveAPIView):
-    permission_classes = [IsAdminOrStaff]
+class AdminPaymentDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.select_related("booking", "received_by")
 
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsSuperAdmin()]
+        return [IsAdminOrStaff()]
+
     def retrieve(self, request, *args, **kwargs):
         return success_response(data=self.get_serializer(self.get_object()).data)
+
+    def destroy(self, request, *args, **kwargs):
+        PaymentService.delete_payment(self.get_object(), changed_by=request.user)
+        return success_response(message="Payment deleted successfully.")
 
 
 @extend_schema_view(

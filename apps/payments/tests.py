@@ -7,6 +7,7 @@ from decimal import Decimal
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -58,6 +59,19 @@ class PaymentServiceTests(TestCase):
             email_opt_in=True,
             whatsapp_opt_in=False,
             sms_opt_in=False,
+        )
+        User = get_user_model()
+        self.admin_user = User.objects.create_user(
+            email="admin@example.com",
+            password="password",
+            full_name="Admin User",
+            role=User.Role.ADMIN,
+            is_staff=True,
+        )
+        self.super_admin_user = User.objects.create_superuser(
+            email="super@example.com",
+            password="password",
+            full_name="Super Admin",
         )
 
     def test_public_payment_order_rejects_when_online_payment_is_disabled(self):
@@ -117,6 +131,41 @@ class PaymentServiceTests(TestCase):
         self.assertEqual(self.booking.payment_status, Booking.PaymentStatus.PARTIALLY_PAID)
         self.assertEqual(self.booking.booking_status, Booking.Status.PENDING)
         self.assertEqual(self.booking.payment_reference, "UPI-123")
+
+    def test_admin_payment_delete_requires_super_admin(self):
+        payment = PaymentService.record_payment(
+            booking=self.booking,
+            amount=Decimal("1000.00"),
+            method=Booking.PaymentMethod.UPI,
+            transaction_id="UPI-DELETE-BLOCKED",
+        )
+        self.client.force_authenticate(self.admin_user)
+
+        response = self.client.delete(
+            reverse("payments:admin-payment-detail", kwargs={"pk": payment.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Payment.objects.filter(id=payment.id).exists())
+
+    def test_super_admin_can_delete_payment_and_recalculate_booking(self):
+        payment = PaymentService.record_payment(
+            booking=self.booking,
+            amount=Decimal("1000.00"),
+            method=Booking.PaymentMethod.UPI,
+            transaction_id="UPI-DELETE",
+        )
+        self.client.force_authenticate(self.super_admin_user)
+
+        response = self.client.delete(
+            reverse("payments:admin-payment-detail", kwargs={"pk": payment.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Payment.objects.filter(id=payment.id).exists())
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.amount_paid, Decimal("0.00"))
+        self.assertEqual(self.booking.balance_amount, Decimal("2000.00"))
 
     @override_settings(UPI_PAYEE_VPA="greenview@upi", UPI_PAYEE_NAME="Green View Cottages")
     def test_upi_qr_order_generates_indian_payment_payload(self):

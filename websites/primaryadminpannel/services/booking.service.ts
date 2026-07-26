@@ -90,6 +90,10 @@ export const bookingService = {
     );
   },
 
+  async deleteBooking(bookingId: string): Promise<void> {
+    await api.delete(`/admin/bookings/${bookingId}/`);
+  },
+
   async confirmBooking(bookingId: string): Promise<Booking> {
     return unwrap(
       await api.post<ApiSuccessResponse<Booking>>(

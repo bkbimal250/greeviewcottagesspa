@@ -18,6 +18,7 @@ import Textarea from "@/components/common/Textarea";
 import CottageForm from "@/components/cottages/CottageForm";
 import PropertyForm from "@/components/property/PropertyForm";
 import api, { getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import availabilityService from "@/services/availability.service";
 import bookingService from "@/services/booking.service";
 import cottageService from "@/services/cottage.service";
@@ -755,6 +756,21 @@ export function PaymentsPageClient() {
   const [items, setItems] = useState<Payment[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
+  const canDeleteRecords = getStoredUser()?.role === "super_admin";
+
+  function load() {
+    setError("");
+    paymentService
+      .getPayments({ page_size: 50 })
+      .then((data) => {
+        setItems(data.results);
+        setState("ready");
+      })
+      .catch((caught) => {
+        setError(getApiErrorMessage(caught));
+        setState("error");
+      });
+  }
 
   useEffect(() => {
     paymentService
@@ -768,6 +784,16 @@ export function PaymentsPageClient() {
         setState("error");
       });
   }, []);
+
+  async function deletePayment(paymentId: string) {
+    setError("");
+    try {
+      await paymentService.deletePayment(paymentId);
+      load();
+    } catch (caught) {
+      setError(getApiErrorMessage(caught));
+    }
+  }
 
   return (
     <section className="space-y-5">
@@ -785,6 +811,7 @@ export function PaymentsPageClient() {
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Date</th>
+                {canDeleteRecords ? <th className="px-4 py-3 text-right">Delete</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -795,6 +822,17 @@ export function PaymentsPageClient() {
                   <td className="px-4 py-3">{formatMoney(item.amount)}</td>
                   <td className="px-4 py-3">{item.status}</td>
                   <td className="px-4 py-3">{formatDate(item.created_at)}</td>
+                  {canDeleteRecords ? (
+                    <td className="px-4 py-3 text-right">
+                      <DeleteButton
+                        size="sm"
+                        buttonLabel="Delete"
+                        title="Delete payment"
+                        description={`Delete payment ${formatMoney(item.amount)} for booking ${item.booking_id || item.booking}? The booking paid balance will be recalculated.`}
+                        onDelete={() => deletePayment(item.id)}
+                      />
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

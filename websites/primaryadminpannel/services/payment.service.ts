@@ -41,6 +41,10 @@ export const paymentService = {
     );
   },
 
+  async deletePayment(paymentId: string): Promise<void> {
+    await api.delete(`/admin/payments/${paymentId}/`);
+  },
+
   async createPayment(
     payload: PaymentCreatePayload,
   ): Promise<Payment> {

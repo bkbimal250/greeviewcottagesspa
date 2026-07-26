@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, status
 
-from apps.accounts.permissions import IsAdminOrStaff
+from apps.accounts.permissions import IsAdminOrStaff, IsSuperAdmin
 from apps.bookings.filters import BookingFilter
 from apps.bookings.models import Booking
 from apps.bookings.selectors import BookingSelector
@@ -154,11 +154,15 @@ class AdminBookingListView(generics.ListAPIView):
 
 
 @extend_schema(tags=["Admin Bookings"])
-class AdminBookingDetailView(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsAdminOrStaff]
+class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BookingAdminDetailSerializer
     queryset = BookingSelector.detail()
-    http_method_names = ["get", "patch", "head", "options"]
+    http_method_names = ["get", "patch", "delete", "head", "options"]
+
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsSuperAdmin()]
+        return [IsAdminOrStaff()]
 
     def retrieve(self, request, *args, **kwargs):
         return success_response(data=self.get_serializer(self.get_object()).data)
@@ -168,6 +172,10 @@ class AdminBookingDetailView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return success_response(data=serializer.data, message="Booking updated successfully.")
+
+    def destroy(self, request, *args, **kwargs):
+        self.perform_destroy(self.get_object())
+        return success_response(message="Booking deleted successfully.")
 
 
 class AdminBookingActionView(generics.GenericAPIView):

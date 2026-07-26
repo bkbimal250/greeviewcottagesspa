@@ -96,6 +96,18 @@ class PaymentService:
         )
         return payment.transaction_id if payment else booking.payment_reference
 
+    @classmethod
+    def delete_payment(cls, payment: Payment, changed_by=None) -> None:
+        with transaction.atomic():
+            payment = (
+                Payment.objects.select_for_update()
+                .select_related("booking")
+                .get(pk=payment.pk)
+            )
+            booking = Booking.objects.select_for_update().get(pk=payment.booking_id)
+            payment.delete()
+            cls.recalculate_booking_payment_summary(booking, changed_by=changed_by)
+
     @staticmethod
     def enqueue_payment_notification(payment_id: str) -> None:
         from apps.notifications.tasks import send_payment_received_notifications

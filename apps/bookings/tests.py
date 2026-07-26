@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -41,6 +42,19 @@ class BookingAppTests(TestCase):
         )
         self.check_in = timezone.localdate() + timedelta(days=7)
         self.check_out = self.check_in + timedelta(days=2)
+        User = get_user_model()
+        self.admin_user = User.objects.create_user(
+            email="booking-admin@example.com",
+            password="password",
+            full_name="Booking Admin",
+            role=User.Role.ADMIN,
+            is_staff=True,
+        )
+        self.super_admin_user = User.objects.create_superuser(
+            email="booking-super@example.com",
+            password="password",
+            full_name="Booking Super Admin",
+        )
 
     def booking_payload(self):
         return {
@@ -208,6 +222,28 @@ class BookingAppTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Booking.objects.count(), 2)
+
+    def test_admin_booking_delete_requires_super_admin(self):
+        booking = BookingService.create_guest_booking(self.booking_service_payload())
+        self.client.force_authenticate(self.admin_user)
+
+        response = self.client.delete(
+            reverse("bookings:admin-booking-detail", kwargs={"pk": booking.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Booking.objects.filter(id=booking.id).exists())
+
+    def test_super_admin_can_delete_booking(self):
+        booking = BookingService.create_guest_booking(self.booking_service_payload())
+        self.client.force_authenticate(self.super_admin_user)
+
+        response = self.client.delete(
+            reverse("bookings:admin-booking-detail", kwargs={"pk": booking.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(Booking.objects.filter(id=booking.id).exists())
 
     def test_booking_lookup_requires_matching_phone(self):
         booking = BookingService.create_guest_booking(self.booking_service_payload())

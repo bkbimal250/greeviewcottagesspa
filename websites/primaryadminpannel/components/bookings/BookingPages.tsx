@@ -6,10 +6,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { FaCheck, FaPlus, FaRupeeSign, FaSave, FaSyncAlt, FaTimes } from "react-icons/fa";
 
 import Button from "@/components/common/Button";
+import DeleteButton from "@/components/common/DeleteButton";
 import Input from "@/components/common/Input";
 import Select from "@/components/common/Select";
 import Textarea from "@/components/common/Textarea";
 import { getApiErrorMessage } from "@/lib/api";
+import { getStoredUser } from "@/lib/auth";
 import bookingService from "@/services/booking.service";
 import cottageService from "@/services/cottage.service";
 import paymentService from "@/services/payment.service";
@@ -205,6 +207,7 @@ export function BookingsPageClient() {
   const [items, setItems] = useState<BookingListItem[]>([]);
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState("");
+  const canDeleteRecords = getStoredUser()?.role === "super_admin";
 
   function load() {
     setState("loading");
@@ -230,6 +233,16 @@ export function BookingsPageClient() {
       if (status === "pending") await bookingService.confirmBooking(id);
       if (status === "confirmed") await bookingService.checkIn(id);
       if (status === "checked_in") await bookingService.checkOut(id);
+      load();
+    } catch (caught) {
+      setError(getApiErrorMessage(caught));
+    }
+  }
+
+  async function deleteBooking(id: string) {
+    setError("");
+    try {
+      await bookingService.deleteBooking(id);
       load();
     } catch (caught) {
       setError(getApiErrorMessage(caught));
@@ -273,6 +286,15 @@ export function BookingsPageClient() {
                         <Button type="button" size="sm" onClick={() => runAction(item.id, item.booking_status)}>
                           {item.booking_status === "pending" ? "Confirm" : item.booking_status === "confirmed" ? "Check in" : "Check out"}
                         </Button>
+                      ) : null}
+                      {canDeleteRecords ? (
+                        <DeleteButton
+                          size="sm"
+                          buttonLabel="Delete"
+                          title="Delete booking"
+                          description={`Delete booking ${item.booking_id} for ${item.guest_name}? This also removes linked payments and booking history.`}
+                          onDelete={() => deleteBooking(item.id)}
+                        />
                       ) : null}
                     </div>
                   </td>
@@ -345,6 +367,8 @@ function useBooking() {
 
 export function BookingDetailsPageClient() {
   const { bookingId, booking, state, error, setError, load } = useBooking();
+  const router = useRouter();
+  const canDeleteRecords = getStoredUser()?.role === "super_admin";
 
   async function action(kind: "confirm" | "check-in" | "check-out") {
     try {
@@ -352,6 +376,15 @@ export function BookingDetailsPageClient() {
       if (kind === "check-in") await bookingService.checkIn(bookingId);
       if (kind === "check-out") await bookingService.checkOut(bookingId);
       load();
+    } catch (caught) {
+      setError(getApiErrorMessage(caught));
+    }
+  }
+
+  async function deleteBooking() {
+    try {
+      await bookingService.deleteBooking(bookingId);
+      router.push("/bookings");
     } catch (caught) {
       setError(getApiErrorMessage(caught));
     }
@@ -371,6 +404,13 @@ export function BookingDetailsPageClient() {
             {booking.booking_status === "pending" ? <Button type="button" onClick={() => action("confirm")} leftIcon={<FaCheck />}>Confirm</Button> : null}
             {booking.booking_status === "confirmed" ? <Button type="button" onClick={() => action("check-in")} leftIcon={<FaCheck />}>Check in</Button> : null}
             {booking.booking_status === "checked_in" ? <Button type="button" onClick={() => action("check-out")} leftIcon={<FaCheck />}>Check out</Button> : null}
+            {canDeleteRecords ? (
+              <DeleteButton
+                title="Delete booking"
+                description={`Delete booking ${booking.booking_id} for ${booking.guest_name}? This also removes linked payments and booking history.`}
+                onDelete={deleteBooking}
+              />
+            ) : null}
           </div>
           <DetailGrid booking={booking} />
           {(booking.special_request || booking.admin_notes || booking.cancellation_reason) ? (

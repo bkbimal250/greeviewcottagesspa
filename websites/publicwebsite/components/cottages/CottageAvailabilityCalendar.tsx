@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -97,6 +98,30 @@ function statusClasses(status: CottageAvailabilityStatus): string {
   return "border-slate-200 bg-slate-50 text-slate-500";
 }
 
+function todayInputDate(): string {
+  return formatInputDate(new Date());
+}
+
+function unavailableMessage(day: CottageAvailabilityDay, today: string): string {
+  if (day.date <= today) {
+    return "Booking is available from tomorrow. Please choose a future date.";
+  }
+
+  if (day.status === "booked") {
+    return "This date is already booked. Please choose another date.";
+  }
+
+  if (day.status === "blocked") {
+    return "This date is blocked by the property. Please choose another date.";
+  }
+
+  if (day.status === "hold") {
+    return "This date is temporarily on hold. Please choose another date.";
+  }
+
+  return "This date is not available. Please choose another date.";
+}
+
 function clampCount(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) {
     return min;
@@ -118,6 +143,7 @@ export default function CottageAvailabilityCalendar({
   maximumGuests = 16,
   className = "",
 }: CottageAvailabilityCalendarProps) {
+  const [calendarMessage, setCalendarMessage] = useState("");
   const monthValue =
     currentMonth || days[0]?.date.slice(0, 7) || formatInputDate(new Date()).slice(0, 7);
   const monthStart = parseDate(`${monthValue}-01`);
@@ -153,6 +179,7 @@ export default function CottageAvailabilityCalendar({
       }).toString()}`
     : "";
   const leadingBlanks = monthStart.getDay();
+  const today = todayInputDate();
 
   if (days.length === 0) {
     return null;
@@ -218,6 +245,15 @@ export default function CottageAvailabilityCalendar({
       </div>
 
       <div className="mt-6 overflow-x-auto pb-2">
+        {calendarMessage ? (
+          <div
+            role="status"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900"
+          >
+            {calendarMessage}
+          </div>
+        ) : null}
+
         <div className="min-w-[720px]">
           <div className="grid grid-cols-7 gap-2">
             {weekDays.map((day) => (
@@ -239,7 +275,17 @@ export default function CottageAvailabilityCalendar({
 
             {days.map((day) => {
               const date = parseDate(day.date);
-              const isAvailable = day.is_available;
+              const isPastOrToday = day.date <= today;
+              const isAvailable = day.is_available && !isPastOrToday;
+              const displayStatus = isPastOrToday ? "unavailable" : day.status;
+              const displayLabel = isPastOrToday
+                ? day.date === today
+                  ? "Available from tomorrow"
+                  : "Past date"
+                : day.status === "booked"
+                  ? "Already booked"
+                  : day.label;
+              const message = unavailableMessage(day, today);
               const dayContent = (
                 <>
                   <span className="flex items-start justify-between gap-2">
@@ -255,7 +301,7 @@ export default function CottageAvailabilityCalendar({
                   </span>
 
                   <span className="mt-4 block text-xs font-bold uppercase">
-                    {day.label}
+                    {displayLabel}
                   </span>
 
                   {isAvailable ? (
@@ -275,7 +321,7 @@ export default function CottageAvailabilityCalendar({
                     "min-h-[124px] rounded-lg border p-3 text-left",
                     "transition focus-visible:outline-none focus-visible:ring-2",
                     "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
-                    statusClasses(day.status),
+                    statusClasses(displayStatus),
                     "hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]",
                   ].join(" ")}
                 >
@@ -285,10 +331,13 @@ export default function CottageAvailabilityCalendar({
                 <button
                   key={day.date}
                   type="button"
-                  disabled
+                  aria-disabled="true"
+                  title={message}
+                  onClick={() => setCalendarMessage(message)}
                   className={[
-                    "min-h-[124px] cursor-not-allowed rounded-lg border p-3 text-left opacity-80",
-                    statusClasses(day.status),
+                    "min-h-[124px] cursor-not-allowed rounded-lg border p-3 text-left opacity-90",
+                    "transition hover:border-rose-400 hover:bg-rose-50 hover:text-rose-900",
+                    statusClasses(displayStatus),
                   ].join(" ")}
                 >
                   {dayContent}
