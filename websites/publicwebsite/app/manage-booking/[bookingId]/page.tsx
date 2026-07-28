@@ -22,6 +22,7 @@ import Button from "@/components/common/Button";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import Price from "@/components/common/Price";
+import ClientPropertyCoverHero from "@/components/layout/ClientPropertyCoverHero";
 import Container from "@/components/layout/Container";
 
 interface BookingLookupData {
@@ -308,7 +309,7 @@ return (
     </section>
 
     {/* Booking hero */}
-    <section className="relative isolate overflow-hidden bg-[#153c2a] py-14 text-white sm:py-18 lg:py-20">
+    <ClientPropertyCoverHero className="py-14 sm:py-18 lg:py-20">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-[#2f704c]/25 blur-3xl" />
 
@@ -384,7 +385,7 @@ return (
           </div>
         </div>
       </Container>
-    </section>
+    </ClientPropertyCoverHero>
 
     {/* Booking content */}
     <section className="relative overflow-hidden bg-[#f7f5ef] py-14 sm:py-18 lg:py-20">

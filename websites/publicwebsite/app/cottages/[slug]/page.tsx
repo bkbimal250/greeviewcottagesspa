@@ -297,22 +297,11 @@ export default async function CottageDetailPage({
     isValidDate(selectedCheckOut) &&
     new Date(`${selectedCheckOut}T00:00:00`) >
       new Date(`${selectedCheckIn}T00:00:00`);
-  const selectedDateQuery = datesAreSelected
-    ? new URLSearchParams({
-        check_in: selectedCheckIn,
-        check_out: selectedCheckOut,
-        adults: String(adults),
-        children: String(children),
-      }).toString()
-    : "";
   const guestQuery = new URLSearchParams({
     adults: String(adults),
     children: String(children),
   }).toString();
   const availabilityHref = `/cottages/${cottage.slug}/availability?${guestQuery}`;
-  const bookingHref = selectedDateQuery
-    ? `/booking/${cottage.id}?${selectedDateQuery}`
-    : availabilityHref;
   const breadcrumbItems = [
     { label: "Home", href: "/" },
     { label: "Cottages", href: "/cottages" },
@@ -371,7 +360,6 @@ export default async function CottageDetailPage({
       <CottagePageTabs
         slug={cottage.slug}
         active="details"
-        bookingHref={bookingHref}
         className="mt-6"
       />
 
@@ -403,7 +391,6 @@ export default async function CottageDetailPage({
 
               {availabilityCalendar ? (
                 <CottageAvailabilityCalendar
-                  cottageId={cottage.id}
                   cottageName={cottage.name}
                   cottageSlug={cottage.slug}
                   days={availabilityCalendar.days}
@@ -433,7 +420,8 @@ export default async function CottageDetailPage({
                   </h2>
 
                   <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                    Check live dates, book online, or speak with the property team before confirming.
+                    Check live dates, then call or send a WhatsApp message to
+                    confirm your stay with the property team.
                   </p>
 
                   <div className="mt-4">
@@ -521,15 +509,12 @@ export default async function CottageDetailPage({
                 </div>
 
                 <div className="grid gap-3 p-6">
-                  <Button
-                    href={bookingHref}
-                    fullWidth
-                    size="lg"
-                  >
-                    {selectedDateQuery
-                      ? "Book Online"
-                      : "View Date Availability"}
-                  </Button>
+                  <ContactActions
+                    cottageName={cottage.name}
+                    layout="stack"
+                    whatsappLabel="WhatsApp This Cottage"
+                    callLabel="Call for Availability"
+                  />
 
                   <Button
                     href={availabilityHref}
@@ -539,13 +524,6 @@ export default async function CottageDetailPage({
                   >
                     Open Availability Calendar
                   </Button>
-
-                  <ContactActions
-                    cottageName={cottage.name}
-                    layout="stack"
-                    whatsappLabel="Ask About This Cottage"
-                    callLabel="Call for Availability"
-                  />
                 </div>
               </div>
 
@@ -555,8 +533,8 @@ export default async function CottageDetailPage({
                 </p>
 
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                  Select your dates to confirm live availability and get the
-                  final backend-calculated booking amount.
+                  Online booking is temporarily paused. Please contact the
+                  property team directly for availability and confirmation.
                 </p>
               </div>
             </aside>

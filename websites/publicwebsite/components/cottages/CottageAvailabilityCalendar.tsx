@@ -16,7 +16,6 @@ import type {
 } from "@/types/cottage";
 
 interface CottageAvailabilityCalendarProps {
-  cottageId: string;
   cottageName: string;
   cottageSlug?: string;
   days: CottageAvailabilityDay[];
@@ -57,25 +56,6 @@ function addMonths(monthValue: string, amount: number): string {
     2,
     "0",
   )}`;
-}
-
-function nextDay(value: string): string {
-  const date = parseDate(value);
-  date.setDate(date.getDate() + 1);
-
-  return formatInputDate(date);
-}
-
-function getBookingHref(
-  cottageId: string,
-  day: CottageAvailabilityDay,
-): string {
-  return `/booking/${cottageId}?${new URLSearchParams({
-    check_in: day.date,
-    check_out: day.check_out || nextDay(day.date),
-    adults: "1",
-    children: "0",
-  }).toString()}`;
 }
 
 function statusClasses(status: CottageAvailabilityStatus): string {
@@ -131,7 +111,6 @@ function clampCount(value: number, min: number, max: number): number {
 }
 
 export default function CottageAvailabilityCalendar({
-  cottageId,
   cottageName,
   cottageSlug,
   days,
@@ -204,8 +183,9 @@ export default function CottageAvailabilityCalendar({
           </h2>
 
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            Select an available date for {cottageName}. Only paid confirmed
-            bookings are marked as booked on this calendar.
+            Check available dates for {cottageName}. Please call or send a
+            WhatsApp message to confirm the latest availability before
+            planning your stay.
           </p>
         </div>
 
@@ -286,6 +266,7 @@ export default function CottageAvailabilityCalendar({
                   ? "Already booked"
                   : day.label;
               const message = unavailableMessage(day, today);
+              const availableMessage = `${day.date} looks available. Please call or WhatsApp Green View Cottages to confirm this date.`;
               const dayContent = (
                 <>
                   <span className="flex items-start justify-between gap-2">
@@ -313,31 +294,23 @@ export default function CottageAvailabilityCalendar({
                 </>
               );
 
-              return isAvailable ? (
-                <Link
+              return (
+                <button
                   key={day.date}
-                  href={getBookingHref(cottageId, day)}
+                  type="button"
+                  aria-disabled={isAvailable ? undefined : "true"}
+                  title={isAvailable ? availableMessage : message}
+                  onClick={() =>
+                    setCalendarMessage(isAvailable ? availableMessage : message)
+                  }
                   className={[
                     "min-h-[124px] rounded-lg border p-3 text-left",
                     "transition focus-visible:outline-none focus-visible:ring-2",
                     "focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2",
                     statusClasses(displayStatus),
-                    "hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]",
-                  ].join(" ")}
-                >
-                  {dayContent}
-                </Link>
-              ) : (
-                <button
-                  key={day.date}
-                  type="button"
-                  aria-disabled="true"
-                  title={message}
-                  onClick={() => setCalendarMessage(message)}
-                  className={[
-                    "min-h-[124px] cursor-not-allowed rounded-lg border p-3 text-left opacity-90",
-                    "transition hover:border-rose-400 hover:bg-rose-50 hover:text-rose-900",
-                    statusClasses(displayStatus),
+                    isAvailable
+                      ? "hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]"
+                      : "cursor-not-allowed opacity-90 hover:border-rose-400 hover:bg-rose-50 hover:text-rose-900",
                   ].join(" ")}
                 >
                   {dayContent}

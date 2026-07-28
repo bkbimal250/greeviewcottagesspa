@@ -9,11 +9,12 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 
-import Button from "@/components/common/Button";
+import ContactActions from "@/components/common/ContactActions";
 import Price from "@/components/common/Price";
 import CottageAvailabilityCalendar from "@/components/cottages/CottageAvailabilityCalendar";
 import CottagePageTabs from "@/components/cottages/CottagePageTabs";
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
 import {
   getCottageAvailabilityCalendar,
   getCottageBySlug,
@@ -142,30 +143,12 @@ export default async function CottageAvailabilityPage({
     isValidDate(selectedCheckOut) &&
     new Date(`${selectedCheckOut}T00:00:00`) >
       new Date(`${selectedCheckIn}T00:00:00`);
-  const selectedDateQuery = datesAreSelected
-    ? new URLSearchParams({
-        check_in: selectedCheckIn,
-        check_out: selectedCheckOut,
-        adults: String(adults),
-        children: String(children),
-      }).toString()
-    : "";
-  const bookingHref = selectedDateQuery
-    ? `/booking/${cottage.id}?${selectedDateQuery}`
-    : undefined;
-  const availabilityHref = `/cottages/${cottage.slug}/availability?${new URLSearchParams(
-    {
-      month: selectedMonth,
-      adults: String(adults),
-      children: String(children),
-    },
-  ).toString()}`;
   const checkInTime = formatTime(property?.check_in_time);
   const checkOutTime = formatTime(property?.check_out_time);
 
   return (
     <>
-      <section className="bg-[#1f2a22] py-10 text-white sm:py-12">
+      <PropertyCoverHero className="py-10 sm:py-12">
         <Container>
           <Link
             href={`/cottages/${cottage.slug}`}
@@ -186,8 +169,8 @@ export default async function CottageAvailabilityPage({
               </h1>
 
               <p className="mt-4 max-w-2xl text-base leading-7 text-white/75">
-                Choose any future month and book directly from an available
-                date. Only paid confirmed bookings are shown as booked.
+                Choose any future month to review open dates, then call or send
+                a WhatsApp message to confirm availability with the property.
               </p>
             </div>
 
@@ -220,12 +203,11 @@ export default async function CottageAvailabilityPage({
             </div>
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
       <CottagePageTabs
         slug={cottage.slug}
         active="availability"
-        bookingHref={bookingHref}
       />
 
       <section className="section bg-[var(--background)]">
@@ -234,7 +216,6 @@ export default async function CottageAvailabilityPage({
             <div className="min-w-0">
               {calendar ? (
                 <CottageAvailabilityCalendar
-                  cottageId={cottage.id}
                   cottageName={cottage.name}
                   cottageSlug={cottage.slug}
                   days={calendar.days}
@@ -276,7 +257,7 @@ export default async function CottageAvailabilityPage({
 
                     <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
                       Select an available date from the board, then continue
-                      to the booking form.
+                      by calling or messaging the property team.
                     </p>
                   </div>
                 </div>
@@ -307,20 +288,18 @@ export default async function CottageAvailabilityPage({
 
                     <p className="text-xs leading-5 text-[var(--muted)]">
                       Final price and availability are checked again by the
-                      backend before the booking is saved.
+                      property team before your stay is confirmed.
                     </p>
                   </div>
                 </div>
 
-                <Button
-                  href={bookingHref || availabilityHref}
-                  disabled={!bookingHref}
-                  fullWidth
-                  size="lg"
+                <ContactActions
+                  cottageName={cottage.name}
+                  layout="stack"
+                  whatsappLabel="WhatsApp This Cottage"
+                  callLabel="Call for Availability"
                   className="mt-5"
-                >
-                  Continue to Booking
-                </Button>
+                />
               </div>
 
               {property?.primary_phone ? (

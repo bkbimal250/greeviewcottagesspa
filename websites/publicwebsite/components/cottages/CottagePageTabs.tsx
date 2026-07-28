@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { FaCalendarAlt, FaHome, FaPen } from "react-icons/fa";
+import { FaCalendarAlt, FaHome } from "react-icons/fa";
 
 interface CottagePageTabsProps {
   slug: string;
-  active: "details" | "availability" | "booking";
-  bookingHref?: string;
+  active: "details" | "availability";
   className?: string;
 }
 
@@ -19,23 +18,16 @@ const tabs = [
     label: "Date availability",
     icon: FaCalendarAlt,
   },
-  {
-    key: "booking",
-    label: "Booking",
-    icon: FaPen,
-  },
 ] as const;
 
 export default function CottagePageTabs({
   slug,
   active,
-  bookingHref,
   className = "",
 }: CottagePageTabsProps) {
   const hrefs = {
     details: `/cottages/${slug}`,
     availability: `/cottages/${slug}/availability`,
-    booking: bookingHref || `/cottages/${slug}/availability`,
   };
 
   return (

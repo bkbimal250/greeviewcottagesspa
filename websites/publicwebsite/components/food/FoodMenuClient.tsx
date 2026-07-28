@@ -20,6 +20,7 @@ import type {
   FoodType,
 } from "@/types/food";
 
+import ClientPropertyCoverHero from "@/components/layout/ClientPropertyCoverHero";
 import FoodCard from "./FoodCard";
 import FoodImageCarousel from "./FoodImageCarousel";
 
@@ -163,7 +164,7 @@ export default function FoodMenuClient({
   return (
     <main className="min-h-screen bg-[#f7f5ef]">
       {/* Hero section */}
-      <section className="relative isolate overflow-hidden bg-[#102b20] text-white">
+      <ClientPropertyCoverHero>
         <div className="absolute inset-0 food-hero-pattern opacity-45" />
 
         <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#d7b86a]/10 blur-3xl" />
@@ -225,7 +226,7 @@ export default function FoodMenuClient({
             </div>
           </div>
         </div>
-      </section>
+      </ClientPropertyCoverHero>
 
       {/* Filters section */}
       <section className="relative z-10 -mt-8 pb-5 sm:-mt-10">

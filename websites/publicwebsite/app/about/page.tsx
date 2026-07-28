@@ -3,11 +3,9 @@ import type { Metadata } from "next";
 import {
   FaArrowRight,
   FaBed,
-  FaCalendarCheck,
   FaCheckCircle,
   FaHeart,
   FaLeaf,
-  FaMapMarkerAlt,
   FaMountain,
   FaPhoneAlt,
   FaShieldAlt,
@@ -17,12 +15,17 @@ import {
 } from "react-icons/fa";
 
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
+import PropertyAbout from "@/components/property/PropertyAbout";
+import { getCottages } from "@/lib/api/cottages";
+import { getPublicProperty } from "@/lib/api/property";
 import {
   contactConfig,
   createGeneralWhatsAppMessage,
   createPhoneHref,
   createWhatsAppHref,
 } from "@/lib/config/contact";
+import type { Property } from "@/types/property";
 
 export const metadata: Metadata = {
   title: "About Green View Cottages & Spa",
@@ -92,14 +95,80 @@ const values = [
   },
 ];
 
-export default function AboutPage() {
+function compact(values: Array<string | null | undefined>): string[] {
+  return values
+    .map((value) => (value || "").trim())
+    .filter(Boolean);
+}
+
+function buildLocation(property: Property): string {
+  return (
+    property.full_address ||
+    compact([
+      property.locality,
+      property.city,
+      property.state,
+      property.country,
+      property.pincode,
+    ]).join(", ")
+  );
+}
+
+function cleanDisplayText(value?: string | null): string {
+  return (value || "")
+    .replace(/\s+/g, " ")
+    .replace(/([.!?])(?=[A-Z])/g, "$1 ")
+    .replace(/,(\S)/g, ", $1")
+    .trim();
+}
+
+function getDisplayPropertyName(property?: Property | null): string {
+  return (
+    property?.name
+      ?.replace(/\s+(and|&)\s+spa\s*$/i, "")
+      .replace(/\s+spa\s*$/i, "")
+      .trim() || "Green View Cottages"
+  );
+}
+
+function getPrimaryDescription(property?: Property | null): string {
+  return (
+    cleanDisplayText(property?.short_description) ||
+    cleanDisplayText(property?.description) ||
+    "A comfortable cottage stay where peaceful surroundings, warm hospitality and memorable moments come together."
+  );
+}
+
+function getSecondaryDescription(property?: Property | null): string {
+  const description = cleanDisplayText(property?.description);
+  const shortDescription = cleanDisplayText(property?.short_description);
+
+  if (description && description !== shortDescription) {
+    return description;
+  }
+
+  return "Each cottage provides privacy, essential facilities and a welcoming atmosphere for couples, families and small groups.";
+}
+
+export default async function AboutPage() {
   const phoneNumber = contactConfig.displayPhone;
   const whatsappNumber = contactConfig.whatsappNumber;
+  const [property, cottages] = await Promise.all([
+    getPublicProperty().catch(() => null),
+    getCottages().catch(() => []),
+  ]);
+  const propertyName = getDisplayPropertyName(property);
+  const primaryDescription = getPrimaryDescription(property);
+  const secondaryDescription = getSecondaryDescription(property);
+  const location = property
+    ? buildLocation(property)
+    : "Dhundai, Mount Abu, Rajasthan";
+  const cottageCount = cottages.length;
 
   return (
     <main className="overflow-hidden bg-white">
       {/* Hero */}
-      <section className="relative isolate overflow-hidden bg-[var(--primary)]">
+      <PropertyCoverHero>
         <div className="absolute inset-0">
           <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-black/10 blur-3xl" />
@@ -124,14 +193,11 @@ export default function AboutPage() {
               </div>
 
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                About Green View Cottages
+                About {propertyName}
               </h1>
 
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/80 sm:text-lg">
-                A comfortable cottage stay where
-                peaceful surroundings, warm
-                hospitality and memorable moments come
-                together.
+                {primaryDescription}
               </p>
 
               <nav
@@ -154,162 +220,18 @@ export default function AboutPage() {
             </div>
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
-      {/* Introduction */}
-      <section className="py-16 sm:py-20 lg:py-24">
-        <Container>
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[var(--primary)] to-emerald-800 p-8 shadow-2xl sm:p-10 lg:p-12">
-                <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10" />
-                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-black/10" />
 
-                <div className="relative">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 text-3xl text-white backdrop-blur">
-                    <FaMountain aria-hidden="true" />
-                  </div>
-
-                  <p className="mt-10 text-sm font-semibold uppercase tracking-[0.24em] text-white/65">
-                    Green View Cottages
-                  </p>
-
-                  <h2 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">
-                    Your peaceful escape in the heart
-                    of Mount Abu
-                  </h2>
-
-                  <p className="mt-6 leading-7 text-white/75">
-                    A welcoming place created for
-                    travellers who value comfort,
-                    privacy and a calm holiday
-                    experience.
-                  </p>
-
-                  <div className="mt-10 grid grid-cols-2 gap-4">
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
-                      <FaMapMarkerAlt
-                        aria-hidden="true"
-                        className="text-xl text-white"
-                      />
-
-                      <p className="mt-3 text-sm font-semibold text-white">
-                        Mount Abu
-                      </p>
-
-                      <p className="mt-1 text-xs text-white/60">
-                        Rajasthan
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
-                      <FaCalendarCheck
-                        aria-hidden="true"
-                        className="text-xl text-white"
-                      />
-
-                      <p className="mt-3 text-sm font-semibold text-white">
-                        Easy Booking
-                      </p>
-
-                      <p className="mt-1 text-xs text-white/60">
-                        Quick assistance
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-6 -right-4 hidden rounded-2xl border border-[var(--border)] bg-white p-5 shadow-xl sm:block lg:-right-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-500">
-                    <FaStar aria-hidden="true" />
-                  </div>
-
-                  <div>
-                    <p className="font-bold text-[var(--foreground)]">
-                      Memorable Stays
-                    </p>
-
-                    <p className="text-sm text-[var(--muted)]">
-                      Comfort with care
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--primary)]">
-                Our Story
-              </p>
-
-              <h2 className="mt-4 text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
-                More than a place to stay
-              </h2>
-
-              <p className="mt-6 text-base leading-8 text-[var(--muted)]">
-                Green View Cottages was created to
-                offer travellers a peaceful and
-                comfortable stay in Mount Abu. We
-                believe a good holiday is not only
-                about the destination—it is also about
-                feeling relaxed, cared for and at
-                home.
-              </p>
-
-              <p className="mt-5 text-base leading-8 text-[var(--muted)]">
-                Our cottages provide a pleasant
-                setting for couples, families and
-                groups looking to spend quality time
-                away from busy city life. From clean
-                rooms to friendly assistance, we pay
-                attention to the details that make a
-                stay enjoyable.
-              </p>
-
-              <div className="mt-8 space-y-4">
-                {[
-                  "Relaxed and welcoming atmosphere",
-                  "Friendly support throughout your stay",
-                  "Comfortable accommodation for memorable holidays",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-start gap-3"
-                  >
-                    <FaCheckCircle
-                      aria-hidden="true"
-                      className="mt-1 shrink-0 text-[var(--primary)]"
-                    />
-
-                    <span className="text-sm font-medium leading-6 text-[var(--foreground)]">
-                      {item}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/cottages"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--primary)] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-black/10 transition hover:-translate-y-0.5 hover:opacity-90"
-                >
-                  Explore Cottages
-                  <FaArrowRight aria-hidden="true" />
-                </Link>
-
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-white px-6 py-3.5 text-sm font-bold text-[var(--foreground)] transition hover:bg-[var(--surface-muted)]"
-                >
-                  Contact Us
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Container>
-      </section>
+      <PropertyAbout
+        title={propertyName}
+        subtitle="About the property"
+        description={secondaryDescription}
+        secondaryDescription={primaryDescription}
+        image={property?.thumbnail || property?.cover_image}
+        location={location}
+        totalCottages={cottageCount || undefined}
+      />
 
       {/* Highlights */}
       <section className="bg-[var(--surface-muted)] py-16 sm:py-20 lg:py-24">

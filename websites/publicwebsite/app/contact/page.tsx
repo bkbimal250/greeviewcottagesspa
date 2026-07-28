@@ -10,6 +10,7 @@ import {
 import Button from "@/components/common/Button";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
 import { getPublicProperty } from "@/lib/api/property";
 import { formatTime } from "@/lib/utils/dates";
 import { createPhoneHref, createWhatsAppHref } from "@/lib/utils/phone";
@@ -83,7 +84,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <section className="bg-[#1f2a22] py-14 text-white sm:py-20">
+      <PropertyCoverHero className="py-14 sm:py-20">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--secondary)]">
@@ -100,7 +101,7 @@ export default async function ContactPage() {
             </p>
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
       <section className="section">
         <Container>
@@ -285,8 +286,9 @@ export default async function ContactPage() {
                 </h2>
 
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                  Open the cottage list, pick your preferred cottage, then
-                  select dates and book online from the cottage page.
+                  Open the cottage list, pick your preferred cottage, then use
+                  Call or WhatsApp to confirm availability with the property
+                  team.
                 </p>
 
                 <Button href="/cottages" fullWidth className="mt-5">

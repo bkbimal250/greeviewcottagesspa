@@ -10,7 +10,6 @@ import {
   FaPhoneAlt,
   FaWhatsapp,
 } from "react-icons/fa";
-import { HiOutlineSparkles } from "react-icons/hi2";
 
 import Container from "./Container";
 import MobileMenu from "./MobileMenu";
@@ -266,8 +265,8 @@ export default function Header({
                       />
                     </span>
 
-                    <span className="relative">
-                      Book Your Stay
+                    <span className="relative text-white">
+                      WhatsApp Enquiry
                     </span>
                   </a>
                 ) : (
@@ -323,78 +322,7 @@ export default function Header({
             </div>
           </Container>
 
-          {/* Offer marquee */}
-          <div className="overflow-hidden border-t border-[#173d2c]/5 bg-[#f7f5ef]">
-            <div className="group relative flex min-h-10 items-center">
-              <div className="animate-marquee flex min-w-max items-center gap-8 whitespace-nowrap px-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#64563c] group-hover:[animation-play-state:paused]">
-                {Array.from({ length: 2 }).map(
-                  (_, groupIndex) => (
-                    <div
-                      key={groupIndex}
-                      className="flex items-center gap-8"
-                      aria-hidden={
-                        groupIndex === 1
-                      }
-                    >
-                      <div className="flex items-center gap-3">
-                        <HiOutlineSparkles
-                          aria-hidden="true"
-                          className="text-sm text-[#b89654]"
-                        />
-
-                        <span>
-                          24 Hours Online Booking
-                          Available
-                        </span>
-                      </div>
-
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#b89654]" />
-
-                      <div className="flex items-center gap-3">
-                        <HiOutlineSparkles
-                          aria-hidden="true"
-                          className="text-sm text-[#b89654]"
-                        />
-
-                        <span>
-                          Direct Booking Assistance
-                          Available
-                        </span>
-                      </div>
-
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#b89654]" />
-
-                      <div className="flex items-center gap-3">
-                        <HiOutlineSparkles
-                          aria-hidden="true"
-                          className="text-sm text-[#b89654]"
-                        />
-
-                        <span>
-                          Peaceful Cottage Stay in
-                          Mount Abu
-                        </span>
-                      </div>
-
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#b89654]" />
-
-                      <div className="flex items-center gap-3">
-                        <HiOutlineSparkles
-                          aria-hidden="true"
-                          className="text-sm text-[#b89654]"
-                        />
-
-                        <span>
-                          Quick Booking Support on
-                          WhatsApp
-                        </span>
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          </div>
+   
         </div>
       </header>
 

@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions",
@@ -100,7 +101,7 @@ const sections = [
 export default function TermsPage() {
   return (
     <>
-      <section className="bg-[#1f2a22] py-14 text-white sm:py-20">
+      <PropertyCoverHero className="py-14 sm:py-20">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
             <div
@@ -132,7 +133,7 @@ export default function TermsPage() {
             </p>
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
       <section className="section">
         <Container size="lg">

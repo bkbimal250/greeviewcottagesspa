@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { CottageCardData } from "@/components/cottages/CottageCard";
 import CottageGrid from "@/components/cottages/CottageGrid";
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
 import { getCottages, toCottageCard } from "@/lib/api/cottages";
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default async function CottagesPage() {
 
   return (
     <>
-      <section className="bg-[#1f2a22] py-16 text-white sm:py-20">
+      <PropertyCoverHero className="py-16 sm:py-20">
         <Container>
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--secondary)]">
@@ -43,13 +44,13 @@ export default async function CottagesPage() {
             </p>
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
       <CottageGrid
         cottages={cottages}
         title="Choose your preferred cottage"
         subtitle="Cottage options"
-        description="Cards show the cottage name and key price. Select a cottage to view photos, date availability, and booking options."
+        description="Cards show the cottage name and key price. Select a cottage to view photos, date availability, and direct Call or WhatsApp options."
       />
     </>
   );

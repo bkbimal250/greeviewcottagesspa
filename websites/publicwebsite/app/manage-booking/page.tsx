@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
+import ClientPropertyCoverHero from "@/components/layout/ClientPropertyCoverHero";
 import Container from "@/components/layout/Container";
 
 interface LookupFormValues {
@@ -227,7 +228,7 @@ export default function ManageBookingPage() {
   }
 return (
   <>
-    <section className="relative isolate overflow-hidden bg-[#153c2a] py-16 text-white sm:py-20">
+    <ClientPropertyCoverHero className="py-16 sm:py-20">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-10 h-80 w-80 rounded-full bg-[#2f704c]/25 blur-3xl" />
         <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-[#b89654]/15 blur-3xl" />
@@ -266,7 +267,7 @@ return (
           </p>
         </div>
       </Container>
-    </section>
+    </ClientPropertyCoverHero>
 
     <section className="relative overflow-hidden bg-[#f7f5ef] py-14 sm:py-18 lg:py-20">
       <div className="pointer-events-none absolute inset-0">

@@ -12,6 +12,7 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import CottageGrid from "@/components/cottages/CottageGrid";
 import Container from "@/components/layout/Container";
+import PropertyCoverHero from "@/components/layout/PropertyCoverHero";
 import {
   getAvailableCottages,
   toAvailableCottageCard,
@@ -111,7 +112,7 @@ export default async function SearchPage({
 
   return (
     <>
-      <section className="bg-[#1f2a22] py-12 text-white sm:py-16">
+      <PropertyCoverHero className="py-12 sm:py-16">
         <Container>
           <Link
             href="/cottages"
@@ -155,7 +156,7 @@ export default async function SearchPage({
 
           </div>
         </Container>
-      </section>
+      </PropertyCoverHero>
 
       <section className="section">
         <Container>

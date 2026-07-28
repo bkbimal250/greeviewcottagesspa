@@ -24,6 +24,7 @@ interface CottageGridProps {
   emptyActionLabel?: string;
   emptyActionHref?: string;
   contained?: boolean;
+  showFooter?: boolean;
   className?: string;
 }
 
@@ -40,6 +41,7 @@ export default function CottageGrid({
   emptyActionLabel = "Contact Property",
   emptyActionHref = "/contact",
   contained = true,
+  showFooter = true,
   className = "",
 }: CottageGridProps) {
   const content = (
@@ -114,22 +116,24 @@ export default function CottageGrid({
               ))}
             </div>
 
-            <div className="relative mt-8 flex flex-col gap-3 rounded-2xl border border-[var(--primary)]/10 bg-gradient-to-r from-[var(--primary-light)] to-[#faf7ef] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm leading-6 text-[var(--muted)]">
-                Select a cottage to view full details, amenities, pricing and available dates.
-              </p>
+            {showFooter ? (
+              <div className="relative mt-8 flex flex-col gap-3 rounded-2xl border border-[var(--primary)]/10 bg-gradient-to-r from-[var(--primary-light)] to-[#faf7ef] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-6 text-[var(--muted)]">
+                  Select a cottage to view full details, amenities, pricing and available dates.
+                </p>
 
-              <Link
-                href="/cottages"
-                className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[var(--primary)] transition hover:gap-3"
-              >
-                View all cottages
-                <FaArrowRight
-                  aria-hidden="true"
-                  className="text-xs"
-                />
-              </Link>
-            </div>
+                <Link
+                  href="/cottages"
+                  className="inline-flex shrink-0 items-center gap-2 text-sm font-bold text-[var(--primary)] transition hover:gap-3"
+                >
+                  View all cottages
+                  <FaArrowRight
+                    aria-hidden="true"
+                    className="text-xs"
+                  />
+                </Link>
+              </div>
+            ) : null}
           </>
         )}
       </div>

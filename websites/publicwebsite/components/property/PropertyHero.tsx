@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   FaArrowRight,
   FaCalendarAlt,
@@ -7,7 +6,6 @@ import {
   FaPhoneAlt,
   FaWhatsapp,
 } from "react-icons/fa";
-import { HiOutlineSparkles } from "react-icons/hi2";
 
 import Button from "@/components/common/Button";
 import Container from "@/components/layout/Container";
@@ -51,14 +49,13 @@ function createWhatsAppHref(
 
 export default function PropertyHero({
   name = "Green View Cottages",
-  subtitle = "Peaceful cottage stay in Mount Abu",
   description = "Relax in comfortable private cottages surrounded by the calm atmosphere of Dhundai, Mount Abu.",
   location = "Dhundai, Mount Abu, Rajasthan",
   heroImage,
   phoneNumber =
-    process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
+  process.env.NEXT_PUBLIC_PROPERTY_PHONE || "",
   whatsappNumber =
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "",
   checkInTime,
   checkOutTime,
   className = "",
@@ -71,21 +68,46 @@ export default function PropertyHero({
         className,
       ].join(" ")}
     >
-      <Image
-        src={withImageFallback(
+
+
+      {/* Desktop Background Video */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={withImageFallback(
           heroImage,
           "/images/property-hero-placeholder.webp",
         )}
-        alt={`${name} in ${location}`}
-        fill
-        priority
-        sizes="100vw"
-        className="absolute inset-0 -z-30 object-cover"
-      />
+        className="absolute inset-0 -z-30 hidden h-full w-full object-cover md:block"
+      >
+        <source
+          src="/videos/bg_hero_desktop.mp4"
+          type="video/mp4"
+        />
+      </video>
 
-      <div className="absolute inset-0 -z-20 bg-gradient-to-r from-[#0d2419]/95 via-[#10291e]/72 to-[#10291e]/20" />
+      {/* Mobile Background Video */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={withImageFallback(
+          heroImage,
+          "/images/property-hero-placeholder.webp",
+        )}
+        className="absolute inset-0 -z-30 block h-full w-full object-cover md:hidden"
+      >
+        <source
+          src="/videos/bg_hero_mobile.mp4"
+          type="video/mp4"
+        />
+      </video>
 
-      <div className="absolute inset-0 -z-20 bg-gradient-to-t from-[#081710]/90 via-transparent to-[#081710]/25" />
 
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-[#2f704c]/20 blur-3xl" />
@@ -105,14 +127,7 @@ export default function PropertyHero({
         <div className="w-full">
           <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16">
             <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#e6cf98] backdrop-blur-md">
-                <HiOutlineSparkles
-                  aria-hidden="true"
-                  className="text-base"
-                />
 
-                {subtitle}
-              </div>
 
               <h1 className="mt-6 max-w-4xl font-[var(--font-playfair)] text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl xl:text-[5.4rem]">
                 {name}
@@ -148,6 +163,7 @@ export default function PropertyHero({
               </div>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+
                 <Button
                   href="/cottages"
                   size="lg"
@@ -162,8 +178,7 @@ export default function PropertyHero({
                 <Button
                   href="/cottages"
                   size="lg"
-                  variant="secondary"
-                  className="rounded-full px-7"
+                  className="rounded-full px-7 shadow-[0_14px_30px_rgba(0,0,0,0.2)]"
                   rightIcon={
                     <FaArrowRight aria-hidden="true" />
                   }
@@ -205,81 +220,6 @@ export default function PropertyHero({
                     WhatsApp
                   </Button>
                 ) : null}
-              </div>
-            </div>
-
-            <div className="hidden lg:block">
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-white/10 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-                <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#d7bc7a]/10 blur-2xl" />
-
-                <div className="relative">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-[#e6cf98]">
-                    <HiOutlineSparkles
-                      aria-hidden="true"
-                      className="text-sm"
-                    />
-
-                    Book Direct
-                  </div>
-
-                  <h2 className="mt-5 font-[var(--font-playfair)] text-2xl font-bold leading-tight text-white">
-                    Plan your peaceful Mount Abu stay
-                  </h2>
-
-                  <p className="mt-3 text-sm leading-7 text-white/65">
-                    Get quick assistance with cottage availability,
-                    prices and booking details.
-                  </p>
-
-                  <div className="mt-6 space-y-3">
-                    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#d7bc7a]/15 text-[#e6cf98]">
-                        <FaCalendarAlt aria-hidden="true" />
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          24-Hour Online Booking
-                        </p>
-
-                        <p className="mt-1 text-xs text-white/55">
-                          Check and book anytime
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15 text-[#68df93]">
-                        <FaWhatsapp aria-hidden="true" />
-                      </span>
-
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          Quick WhatsApp Support
-                        </p>
-
-                        <p className="mt-1 text-xs text-white/55">
-                          Fast booking assistance
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {whatsappNumber ? (
-                    <a
-                      href={createWhatsAppHref(
-                        whatsappNumber,
-                        name,
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,211,102,0.2)] transition hover:-translate-y-0.5 hover:bg-[#20bd5a]"
-                    >
-                      <FaWhatsapp aria-hidden="true" />
-                      Book on WhatsApp
-                    </a>
-                  ) : null}
-                </div>
               </div>
             </div>
           </div>

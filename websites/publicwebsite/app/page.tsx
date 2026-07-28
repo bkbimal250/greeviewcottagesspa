@@ -16,7 +16,6 @@ import JsonLd from "@/components/seo/JsonLd";
 import NearbyPlaces, {
   type NearbyPlace,
 } from "@/components/property/NearbyPlaces";
-import PropertyAbout from "@/components/property/PropertyAbout";
 import PropertyFacilities from "@/components/property/PropertyFacilities";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import PropertyHero from "@/components/property/PropertyHero";
@@ -314,22 +313,18 @@ function buildPolicies(
       title: "Stay length",
       description: [
         property.minimum_stay_nights
-          ? `Minimum stay is ${
-              property.minimum_stay_nights
-            } night${
-              property.minimum_stay_nights === 1
-                ? ""
-                : "s"
-            }.`
+          ? `Minimum stay is ${property.minimum_stay_nights
+          } night${property.minimum_stay_nights === 1
+            ? ""
+            : "s"
+          }.`
           : "",
         property.maximum_stay_nights
-          ? `Maximum stay is ${
-              property.maximum_stay_nights
-            } night${
-              property.maximum_stay_nights === 1
-                ? ""
-                : "s"
-            }.`
+          ? `Maximum stay is ${property.maximum_stay_nights
+          } night${property.maximum_stay_nights === 1
+            ? ""
+            : "s"
+          }.`
           : "",
       ]
         .filter(Boolean)
@@ -471,28 +466,6 @@ function getPrimaryDescription(
   );
 }
 
-function getSecondaryDescription(
-  property: Property,
-): string {
-  const description = cleanDisplayText(
-    property.description,
-  );
-
-  const shortDescription =
-    cleanDisplayText(
-      property.short_description,
-    );
-
-  if (
-    description &&
-    description !== shortDescription
-  ) {
-    return description;
-  }
-
-  return "Comfortable private cottages, direct availability checks, and simple booking support from the property team.";
-}
-
 function HomeFactCard({
   icon: Icon,
   label,
@@ -543,11 +516,10 @@ function StayOverview({
       label: "Stay options",
       value:
         cottageCount > 0
-          ? `${cottageCount} active ${
-              cottageCount === 1
-                ? "cottage"
-                : "cottages"
-            }`
+          ? `${cottageCount} active ${cottageCount === 1
+            ? "cottage"
+            : "cottages"
+          }`
           : "Cottage details from backend",
     },
     {
@@ -556,10 +528,10 @@ function StayOverview({
       value:
         checkInTime && checkOutTime
           ? `${formatTime(
-              checkInTime,
-            )} check-in / ${formatTime(
-              checkOutTime,
-            )} check-out`
+            checkInTime,
+          )} check-in / ${formatTime(
+            checkOutTime,
+          )} check-out`
           : "Timing managed by property",
     },
     {
@@ -701,7 +673,7 @@ function FinalBookingCta({
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#e6cf98] backdrop-blur-sm">
                 <span className="h-2 w-2 rounded-full bg-[#d7bc7a]" />
 
-                Book Directly
+                Direct Enquiry
               </div>
 
               <h2 className="mt-5 font-[var(--font-playfair)] text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
@@ -711,16 +683,16 @@ function FinalBookingCta({
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
                 Choose your preferred cottage,
-                select the available dates and
-                complete your booking securely
-                through our direct booking process.
+                review available dates and contact
+                the property team by phone for final
+                confirmation.
               </p>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 {[
-                  "24-hour online booking",
+                  "Call for availability",
                   "Direct property support",
-                  "Simple booking management",
+                  "WhatsApp enquiry support",
                 ].map((item) => (
                   <div
                     key={item}
@@ -745,15 +717,6 @@ function FinalBookingCta({
                 className="w-full rounded-full shadow-[0_14px_30px_rgba(0,0,0,0.18)]"
               >
                 Choose Cottage
-              </Button>
-
-              <Button
-                href="/manage-booking"
-                variant="light"
-                size="lg"
-                className="w-full rounded-full"
-              >
-                Manage Booking
               </Button>
 
               {phoneNumber ? (
@@ -782,7 +745,7 @@ function FinalBookingCta({
 export default async function HomePage() {
   let property: Property | null = null;
 
-  let featuredCottages:
+  let cottages:
     CottageCardData[] = [];
 
   let cottageCount = 0;
@@ -804,25 +767,13 @@ export default async function HomePage() {
   if (
     cottageResult.status === "fulfilled"
   ) {
-    const cottages =
+    const activeCottages =
       cottageResult.value;
 
-    const highlightedCottages =
-      cottages.some(
-        (cottage) => cottage.is_featured,
-      )
-        ? cottages.filter(
-            (cottage) =>
-              cottage.is_featured,
-          )
-        : cottages;
+    cottageCount = activeCottages.length;
 
-    cottageCount = cottages.length;
-
-    featuredCottages =
-      highlightedCottages
-        .slice(0, 3)
-        .map(toCottageCard);
+    cottages =
+      activeCottages.map(toCottageCard);
   } else {
     console.error(
       "Unable to load public cottages:",
@@ -852,9 +803,6 @@ export default async function HomePage() {
 
   const primaryDescription =
     getPrimaryDescription(property);
-
-  const secondaryDescription =
-    getSecondaryDescription(property);
 
   const phoneNumber =
     property.public_phone ||
@@ -902,7 +850,23 @@ export default async function HomePage() {
         }
       />
 
-      <StayOverview
+
+      <CottageGrid
+        cottages={cottages}
+        title="Explore Our Cottages"
+        subtitle="Our Cottages"
+        description="Compare all active cottages, check key stay details, and open your preferred cottage for photos, pricing and available dates."
+        emptyTitle="Our cottages are being prepared for you"
+        emptyDescription="Cottage details are currently being updated. Please contact our property team for availability and booking assistance."
+        emptyActionLabel="Contact for Availability"
+        emptyActionHref="/contact"
+        showFooter={false}
+      />
+
+      <PropertyGallery images={gallery} />
+
+
+        <StayOverview
         cottageCount={cottageCount}
         location={location}
         checkInTime={
@@ -913,38 +877,6 @@ export default async function HomePage() {
         }
         phoneNumber={phoneNumber}
       />
-
-      <PropertyAbout
-        title={propertyName}
-        subtitle="About the property"
-        description={
-          secondaryDescription
-        }
-        secondaryDescription={
-          primaryDescription
-        }
-        image={
-          property.thumbnail ||
-          property.cover_image
-        }
-        location={location}
-        totalCottages={
-          cottageCount || undefined
-        }
-      />
-
-      <CottageGrid
-        cottages={featuredCottages}
-        title="Find Your Perfect Cottage Stay"
-        subtitle="Featured Cottages"
-        description="Explore our peaceful cottages, compare amenities and pricing, check available dates, and book your preferred stay directly."
-        emptyTitle="Our cottages are being prepared for you"
-        emptyDescription="Cottage details are currently being updated. Please contact our property team for availability and booking assistance."
-        emptyActionLabel="Contact for Availability"
-        emptyActionHref="/contact"
-      />
-
-      <PropertyGallery images={gallery} />
 
       <PropertyFacilities
         facilities={property.facilities}

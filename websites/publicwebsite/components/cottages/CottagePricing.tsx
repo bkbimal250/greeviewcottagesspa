@@ -4,15 +4,12 @@ import {
   FaMoon,
 } from "react-icons/fa";
 
-import Button from "@/components/common/Button";
 import Price from "@/components/common/Price";
 
 interface CottagePricingProps {
   weekdayPrice: string | number;
   saturdayPrice: string | number;
   sundayPrice: string | number;
-  cottageId?: string;
-  searchQuery?: string;
   title?: string;
   checkInTime?: string;
   checkOutTime?: string;
@@ -30,8 +27,6 @@ export default function CottagePricing({
   weekdayPrice,
   saturdayPrice,
   sundayPrice,
-  cottageId,
-  searchQuery = "",
   title = "Cottage pricing",
   checkInTime,
   checkOutTime,
@@ -55,11 +50,6 @@ export default function CottagePricing({
       amount: sundayPrice,
     },
   ];
-
-  const bookingHref =
-    cottageId && searchQuery
-      ? `/booking/${cottageId}?${searchQuery}`
-    : "/cottages";
 
   return (
     <section
@@ -173,17 +163,6 @@ export default function CottagePricing({
             {taxNote}
           </p>
         </div>
-
-        <Button
-          href={bookingHref}
-          size="lg"
-          fullWidth
-          className="mt-5"
-        >
-          {cottageId && searchQuery
-            ? "Continue to Booking"
-            : "Select Dates"}
-        </Button>
       </div>
     </section>
   );

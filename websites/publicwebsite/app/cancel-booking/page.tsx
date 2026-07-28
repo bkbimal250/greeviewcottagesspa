@@ -17,6 +17,7 @@ import Button from "@/components/common/Button";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import Input from "@/components/common/Input";
 import Textarea from "@/components/common/Textarea";
+import ClientPropertyCoverHero from "@/components/layout/ClientPropertyCoverHero";
 import Container from "@/components/layout/Container";
 
 interface CancellationFormValues {
@@ -350,7 +351,7 @@ export default function CancelBookingPage() {
         </Container>
       </section>
 
-      <section className="bg-[#1f2a22] py-14 text-white sm:py-18">
+      <ClientPropertyCoverHero className="py-14 sm:py-18">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
             <div
@@ -378,7 +379,7 @@ export default function CancelBookingPage() {
             </p>
           </div>
         </Container>
-      </section>
+      </ClientPropertyCoverHero>
 
       <section className="section">
         <Container size="md">
