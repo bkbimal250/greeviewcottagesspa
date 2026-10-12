@@ -45,6 +45,10 @@ const navigationItems = [
     href: "/foods",
   },
   {
+    label: "Spa Services",
+    href: "/services",
+  },
+  {
     label: "Manage Booking",
     href: "/manage-booking",
   },

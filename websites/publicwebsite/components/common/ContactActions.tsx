@@ -18,6 +18,9 @@ interface ContactActionsProps {
   className?: string;
   whatsappLabel?: string;
   callLabel?: string;
+  phoneNumber?: string;
+  whatsappNumber?: string;
+  whatsappMessage?: string;
 }
 
 export default function ContactActions({
@@ -27,12 +30,17 @@ export default function ContactActions({
   className = "",
   whatsappLabel = cottageName ? "Ask on WhatsApp" : "WhatsApp",
   callLabel = "Call Now",
+  phoneNumber = contactConfig.displayPhone,
+  whatsappNumber = contactConfig.whatsappNumber,
+  whatsappMessage,
 }: ContactActionsProps) {
-  const message = cottageName
-    ? createCottageWhatsAppMessage(cottageName)
-    : createGeneralWhatsAppMessage();
-  const whatsappHref = createWhatsAppHref(message);
-  const phoneHref = createPhoneHref();
+  const message =
+    whatsappMessage ??
+    (cottageName
+      ? createCottageWhatsAppMessage(cottageName)
+      : createGeneralWhatsAppMessage());
+  const whatsappHref = createWhatsAppHref(message, whatsappNumber);
+  const phoneHref = createPhoneHref(phoneNumber);
   const buttonSize =
     size === "sm"
       ? "min-h-10 px-3 text-xs"
@@ -70,7 +78,7 @@ export default function ContactActions({
         </a>
       ) : null}
 
-      {contactConfig.displayPhone ? (
+      {phoneNumber ? (
         <a
           href={phoneHref}
           aria-label={
