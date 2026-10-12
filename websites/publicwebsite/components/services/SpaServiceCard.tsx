@@ -6,6 +6,7 @@ import type { SpaService } from "@/data/services";
 
 interface SpaServiceCardProps {
   service: SpaService;
+  priority?: boolean;
 }
 
 const SPA_PHONE_NUMBER = "+918976854196";
@@ -13,6 +14,7 @@ const SPA_WHATSAPP_NUMBER = "918976854199";
 
 export default function SpaServiceCard({
   service,
+  priority = false,
 }: SpaServiceCardProps) {
   const whatsappMessage =
     `Hello, I would like to enquire about ${service.name} at ` +
@@ -32,6 +34,7 @@ export default function SpaServiceCard({
           src={service.image}
           alt={`${service.name} spa service`}
           fill
+          loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
           className="object-cover transition duration-500 group-hover:scale-105"
         />
